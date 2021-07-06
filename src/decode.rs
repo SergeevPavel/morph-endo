@@ -1,7 +1,9 @@
+use serde::{Deserialize, Serialize};
+
 use crate::dna::{Dna, Base, Subseq};
 use crate::literals::{consts, quote, nat, asnat};
 
-#[derive(Debug)]
+#[derive(Debug, Deserialize, Serialize)]
 pub struct Context {
     pub dna: Dna,
     pub rna: Vec<Dna>,

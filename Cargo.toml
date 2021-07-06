@@ -7,4 +7,12 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+linkme = "*"
 image = "0.23.14"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+ron = "0.6.4"
+
+[[bin]]
+name = "main"
+path = "src/main.rs"
