@@ -1,5 +1,5 @@
 use serde::Serialize;
-use std::path::{PathBuf, Path};
+use std::path::{Path};
 
 
 pub fn store<T, P>(data: &T, path: P)

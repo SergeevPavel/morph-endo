@@ -19,7 +19,7 @@ pub fn load_target() -> Result<image::RgbaImage, String> {
     load_from_file("data/target.png")
 }
 
-#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, Eq, PartialEq, Serialize, Deserialize)]
 pub enum Rgb {
     Black,
     Red,
@@ -46,7 +46,7 @@ impl Rgb {
     }
 }
 
-#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, Eq, PartialEq, Serialize, Deserialize)]
 pub enum Alpha {
     Transparent,
     Opaque,
@@ -61,7 +61,7 @@ impl Alpha {
     }
 }
 
-#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, Eq, PartialEq, Serialize, Deserialize)]
 pub enum Color {
     Rgb(Rgb),
     Alpha(Alpha)
