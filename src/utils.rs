@@ -1,28 +1,26 @@
 use serde::Serialize;
-use std::path::PathBuf;
+use std::path::{PathBuf, Path};
 
 
-pub fn store<T, S>(data: &T, file_name: S)
+pub fn store<T, P>(data: &T, path: P)
 where
     T: Serialize,
-    S: AsRef<str>,
+    P: AsRef<Path>,
 {
     let config = ron::ser::PrettyConfig::new()
         .with_depth_limit(4);
-    let path: PathBuf = ["data", file_name.as_ref()].iter().collect();
-    let file = std::fs::File::create(path).unwrap();
+    let file = std::fs::File::create(Path::new("data").join(path)).unwrap();
     ron::ser::to_writer_pretty(std::io::BufWriter::new(file),
                                data,
                                config).unwrap();
 }
 
 
-pub fn load<T, S>(file_name: S) -> T
+pub fn load<T, P>(path: P) -> T
 where
-    S: AsRef<str>,
+    P: AsRef<Path>,
     T: serde::de::DeserializeOwned,
 {
-    let path: PathBuf = ["data", file_name.as_ref()].iter().collect();
-    let file = std::fs::File::open(path).unwrap();
+    let file = std::fs::File::open(Path::new("data").join(path)).unwrap();
     ron::de::from_reader(std::io::BufReader::new(file)).unwrap()
 }

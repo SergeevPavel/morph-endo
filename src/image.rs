@@ -2,10 +2,10 @@ use serde::{Deserialize, Serialize};
 use std::path::Path;
 use crate::dna::Dna;
 
-type Pixel = image::Rgba<u8>;
+pub type Pixel = image::Rgba<u8>;
 
-pub fn load_from_file<P>(_path: P) -> Result<image::RgbaImage, String> where P: AsRef<Path> {
-    let image = image::io::Reader::open("data/source.png")
+pub fn load_from_file<P>(path: P) -> Result<image::RgbaImage, String> where P: AsRef<Path> {
+    let image = image::io::Reader::open(path)
                     .map_err(|_err| "No source image".to_string())?
                     .decode().map_err(|_err| "Failed to decode source image".to_string())?;
     Ok(image.to_rgba8())
@@ -32,7 +32,7 @@ pub enum Rgb {
 }
 
 impl Rgb {
-    fn encode(&self) -> [u8; 3] {
+    pub fn encode(&self) -> [u8; 3] {
         match self {
             Rgb::Black => [0, 0, 0],
             Rgb::Red => [255, 0, 0],
@@ -53,7 +53,7 @@ pub enum Alpha {
 }
 
 impl Alpha {
-    fn encode(&self) -> u8 {
+    pub fn encode(&self) -> u8 {
         match self {
             Alpha::Transparent => 0,
             Alpha::Opaque => 255,
@@ -117,11 +117,12 @@ impl DrawCommand {
 #[cfg(test)]
 mod tests {
     use super::*;
-    
+    use image::Rgba;
+
     #[test]
-    fn test() {
+    fn load_test() {
         let image = load_source().unwrap();
         let pixel = image.get_pixel(0, 0);
-        
+        assert_eq!(pixel, &Rgba([62, 39, 76, 255]));
     }
 }

@@ -22,7 +22,10 @@ impl Context {
 
 pub fn do_step(context: &mut Context) -> Option<()> {
     let p = pattern(context)?;
+    // println!("Pattern: {:?}", p);
     let t = template(context)?;
+    // println!("Template: {:?}", t);
+    // println!("Context: {:?}", context);
     matchreplace(context, p, t);
     return Some(());
 }
@@ -116,6 +119,7 @@ fn pattern(context: &mut Context) -> Option<Pattern> {
     }
 }
 
+#[derive(Debug, Clone, Eq, PartialEq)]
 enum TItem {
     TBase(Base),
     Ref { n: usize, l: usize },
