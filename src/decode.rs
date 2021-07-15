@@ -2,12 +2,22 @@ use serde::{Deserialize, Serialize};
 
 use crate::dna::{Dna, Base, Subseq};
 use crate::literals::{consts, quote, nat, asnat};
+use crate::image::DrawCommand;
+use std::time::Instant;
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Context {
     pub dna: Dna,
     pub rna: Vec<Dna>,
     pub finished: bool,
+    pub finish_reason: Vec<String>,
+}
+
+impl Context {
+    fn append_rna(&mut self, rna: Dna) {
+        println!("Draw command: {:?}", DrawCommand::decode(&rna));
+        self.rna.push(rna);
+    }
 }
 
 impl Context {
@@ -16,33 +26,26 @@ impl Context {
             dna,
             rna: vec![],
             finished: false,
+            finish_reason: vec![]
         }
     }
 }
 
 pub fn do_step(context: &mut Context) -> Option<()> {
     let p = pattern(context)?;
-    // println!("Pattern: {:?}", p);
     let t = template(context)?;
-    // println!("Template: {:?}", t);
-    // println!("Context: {:?}", context);
     matchreplace(context, p, t);
     return Some(());
 }
 
 pub fn execute(context: &mut Context) {
+    let stat_moment = Instant::now();
     let mut step = 0;
     loop {
-        if step % 1 == 0 {
-            println!("Step: {:?}", step);
-//            println!("RNA: {:?}", context.rna);
-            println!("RNA len: {}", context.rna.len());
-            println!("DNA len: {}", context.dna.len());
-        }
         if let None = do_step(context) {
-            println!("step failed {}", step);
+            println!("Finish with: {:?}", context.finish_reason);
         }
-        if context.finished { break }
+        if context.finished || stat_moment.elapsed().as_secs() > 300 { break }
         step += 1;
     }
 }
@@ -108,10 +111,12 @@ fn pattern(context: &mut Context) -> Option<Pattern> {
                 }
             }
             [I, I, I, ..] => {
-                context.rna.push(context.dna.subseq(3..10));
+                context.append_rna(context.dna.subseq(3..10));
                 context.dna = context.dna.subseq(10..)
             }
-            _ => {
+            dna_tail => {
+                context.finish_reason
+                    .push(format!("Unexpected dna when pattern decoding {:?}", dna_tail).to_string());
                 context.finished = true;
                 return None;
             }
@@ -154,7 +159,7 @@ fn template(context: &mut Context) -> Option<Template> {
                 context.dna = context.dna.subseq(2..);
                 let l = nat(context)?;
                 let n = nat(context)?;
-                template.push(Ref { l, n });
+                template.push(Ref { n, l });
             }
             [I, I, C, ..] | [I, I, F, ..] => {
                 context.dna = context.dna.subseq(3..);
@@ -166,11 +171,13 @@ fn template(context: &mut Context) -> Option<Template> {
                 template.push(Len { n });
             }
             [I, I, I, ..] => {
-                context.rna.push(context.dna.subseq(3..10));
+                context.append_rna(context.dna.subseq(3..10));
                 context.dna = context.dna.subseq(10..);
             }
-            _ => {
+            dna_tail => {
                 context.finished = true;
+                context.finish_reason
+                    .push(format!("Unexpected dna when template decoding {:?}", dna_tail).to_string());
                 return None;
             }
         }
@@ -184,8 +191,10 @@ fn find_subseq(source: &[Base], target: &[Base]) -> Option<usize> {
 }
 
 fn matchreplace(context: &mut Context, pat: Pattern, template: Template) {
+    println!("Pattern: {:?} Template: {:?}", pat, template);
     let mut i: usize = 0;
     let mut env: Environment = vec![];
+    //c is reversed
     let mut c: Vec<usize> = vec![];
     for p in pat {
         match p {
@@ -205,7 +214,7 @@ fn matchreplace(context: &mut Context, pat: Pattern, template: Template) {
             PItem::Search { s } => {
                 // todo handle errors in subslicing
                 if let Some(n) = find_subseq(&context.dna.data[i..], s.data.as_slice()) {
-                    i = n;
+                    i += n;
                 } else {
                     return;
                 }
@@ -244,12 +253,12 @@ fn replace(context: &mut Context, template: Template, env: Environment) {
     context.dna = r;
 }
 
-// rewrite without recoursion
+// rewrite without recursion
 fn protect(l: usize, dna: Dna) -> Dna {
-    if l == 0 {
-        return dna;
+    return if l == 0 {
+        dna
     } else {
-        return protect(l - 1, quote(dna))
+        protect(l - 1, quote(dna))
     }
 }
 
@@ -276,7 +285,7 @@ mod tests {
     }
 
     #[test]
-    fn patern_test() {
+    fn pattern_test() {
         use PItem::*;
         assert_eq!(pattern_by_str("CIIC"), vec![PBase(I)]);
         assert_eq!(pattern_by_str("IIPIPICPIICICIIF"),

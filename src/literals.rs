@@ -17,14 +17,16 @@ pub fn nat(context: &mut Context) -> Option<usize> {
             context.dna = context.dna.subseq(1..);
             nat(context).map(|n| n * 2 + 1)
         }
-        _ => {
+        dna_tail => {
             context.finished = true;
+            context.finish_reason
+                .push(format!("Unexpected dna when nat decoding {:?}", dna_tail).to_string());
             None
         }
     }
 }
 
-// rewriten wihout recursion
+// rewritten without recursion
 pub fn asnat(mut n: usize) -> Dna {
     use Base::*;
     let mut result = Dna::empty();
@@ -72,7 +74,7 @@ pub fn consts(context: &mut Context) -> Dna {
     }
 }
 
-// rewriten wihout recursion
+// rewritten without recursion
 pub fn quote(dna: Dna) -> Dna {
     use Base::*;
     let mut result = Dna::empty();
@@ -88,4 +90,42 @@ pub fn quote(dna: Dna) -> Dna {
         }
     }
     return result;
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use Base::*;
+
+    fn check_quote_unquote(s: &str) {
+        let origin = Dna::from_string("ICFP").unwrap();
+        let quoted = quote(origin.clone());
+        let mut context = Context::new(quoted);
+        let transformed = consts(&mut context);
+        assert_eq!(origin, transformed);
+        assert_eq!(context.dna.len(), 0);
+    }
+
+    #[test]
+    fn const_test() {
+        check_quote_unquote("IIPIPICPIICICIIFICCIFPPIICCFPC");
+        check_quote_unquote("IIPIPICPIICICIIFICCIFCCCPPIICCFPC");
+        check_quote_unquote("IIPIPIICPIICIICCIICFCFC");
+    }
+
+    fn check_asnat_nat(n: usize) {
+        let origin = asnat(n);
+        let mut context = Context::new(origin);
+        let transformed = nat(&mut context);
+        assert_eq!(Some(n), transformed);
+        assert_eq!(context.dna.len(), 0);
+    }
+
+    #[test]
+    fn num_test() {
+        check_asnat_nat(42);
+        check_asnat_nat(100);
+        check_asnat_nat(0);
+        check_asnat_nat(1);
+    }
 }
