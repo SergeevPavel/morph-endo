@@ -95,10 +95,9 @@ pub fn quote(dna: Dna) -> Dna {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use Base::*;
 
     fn check_quote_unquote(s: &str) {
-        let origin = Dna::from_string("ICFP").unwrap();
+        let origin = Dna::from_string(s).unwrap();
         let quoted = quote(origin.clone());
         let mut context = Context::new(quoted);
         let transformed = consts(&mut context);

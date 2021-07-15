@@ -49,6 +49,20 @@ impl Dna {
     }
 }
 
+impl std::fmt::Display for Dna {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        for b in &self.data {
+            f.write_str(match b {
+                Base::I => "I",
+                Base::C => "C",
+                Base::F => "F",
+                Base::P => "P",
+            })?
+        }
+        Ok(())
+    }
+}
+
 pub trait Subseq<Interval> {
     fn subseq(&self, interval: Interval) -> Dna;
 }

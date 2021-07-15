@@ -298,6 +298,7 @@ fn drawer_main() {
     for command in commands {
         drawer.apply(command);
     }
+    drawer.bitmaps.last_mut().unwrap().fill(Position {x : 0, y: 0},  Rgba([0, 0, 0, 255]));
     drawer.bitmaps.last().unwrap().save(["data", &folder, "result.png"].iter().collect::<PathBuf>()).unwrap();
 }
 
@@ -307,8 +308,7 @@ mod tests {
     use std::path::PathBuf;
 
     use super::*;
-    use crate::image::Rgb;
-    use std::io::repeat;
+    use crate::image::{Rgb, Alpha};
 
     fn with_image<N, F>(file_name: N, f: F)
         where

@@ -1,8 +1,8 @@
 use serde::{Deserialize, Serialize};
 
-use crate::dna::{Dna, Base, Subseq};
-use crate::literals::{consts, quote, nat, asnat};
+use crate::dna::{Base, Dna, Subseq};
 use crate::image::DrawCommand;
+use crate::literals::{asnat, consts, nat, quote};
 use std::time::Instant;
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -26,7 +26,7 @@ impl Context {
             dna,
             rna: vec![],
             finished: false,
-            finish_reason: vec![]
+            finish_reason: vec![],
         }
     }
 }
@@ -40,13 +40,15 @@ pub fn do_step(context: &mut Context) -> Option<()> {
 
 pub fn execute(context: &mut Context) {
     let stat_moment = Instant::now();
-    let mut step = 0;
+    let mut _step = 0;
     loop {
         if let None = do_step(context) {
             println!("Finish with: {:?}", context.finish_reason);
         }
-        if context.finished || stat_moment.elapsed().as_secs() > 300 { break }
-        step += 1;
+        if context.finished || stat_moment.elapsed().as_secs() > 300 {
+            break;
+        }
+        _step += 1;
     }
 }
 
@@ -90,7 +92,7 @@ fn pattern(context: &mut Context) -> Option<Pattern> {
                 } else {
                     return None;
                 }
-            }   
+            }
             [I, F, ..] => {
                 context.dna = context.dna.subseq(3..);
                 let s = consts(context);
@@ -115,8 +117,9 @@ fn pattern(context: &mut Context) -> Option<Pattern> {
                 context.dna = context.dna.subseq(10..)
             }
             dna_tail => {
-                context.finish_reason
-                    .push(format!("Unexpected dna when pattern decoding {:?}", dna_tail).to_string());
+                context.finish_reason.push(
+                    format!("Unexpected dna when pattern decoding {:?}", dna_tail).to_string(),
+                );
                 context.finished = true;
                 return None;
             }
@@ -128,14 +131,14 @@ fn pattern(context: &mut Context) -> Option<Pattern> {
 enum TItem {
     TBase(Base),
     Ref { n: usize, l: usize },
-    Len { n: usize }
+    Len { n: usize },
 }
 
 type Template = Vec<TItem>;
 
 fn template(context: &mut Context) -> Option<Template> {
-    use TItem::*;
     use Base::*;
+    use TItem::*;
     let mut template: Template = vec![];
     loop {
         match context.dna.data.as_slice() {
@@ -176,8 +179,9 @@ fn template(context: &mut Context) -> Option<Template> {
             }
             dna_tail => {
                 context.finished = true;
-                context.finish_reason
-                    .push(format!("Unexpected dna when template decoding {:?}", dna_tail).to_string());
+                context.finish_reason.push(
+                    format!("Unexpected dna when template decoding {:?}", dna_tail).to_string(),
+                );
                 return None;
             }
         }
@@ -187,7 +191,10 @@ fn template(context: &mut Context) -> Option<Template> {
 type Environment = Vec<Dna>;
 
 fn find_subseq(source: &[Base], target: &[Base]) -> Option<usize> {
-    source.windows(target.len()).position(|window| window == target).map(|pos| pos + target.len())
+    source
+        .windows(target.len())
+        .position(|window| window == target)
+        .map(|pos| pos + target.len())
 }
 
 fn matchreplace(context: &mut Context, pat: Pattern, template: Template) {
@@ -202,15 +209,15 @@ fn matchreplace(context: &mut Context, pat: Pattern, template: Template) {
                 if context.dna.nth(i) == Some(b) {
                     i += 1;
                 } else {
-                    return
+                    return;
                 }
-            },
+            }
             PItem::Skip { n } => {
                 i += n;
                 if i > context.dna.len() {
-                    return
+                    return;
                 }
-            },
+            }
             PItem::Search { s } => {
                 // todo handle errors in subslicing
                 if let Some(n) = find_subseq(&context.dna.data[i..], s.data.as_slice()) {
@@ -218,14 +225,17 @@ fn matchreplace(context: &mut Context, pat: Pattern, template: Template) {
                 } else {
                     return;
                 }
-                
-            },
+            }
             PItem::Open => {
                 c.push(i);
-            },
+            }
             PItem::Close => {
-                env.push(context.dna.subseq(c.pop().expect("Unexpectedly empty stack")..i));
-            },
+                env.push(
+                    context
+                        .dna
+                        .subseq(c.pop().expect("Unexpectedly empty stack")..i),
+                );
+            }
         }
     }
     context.dna = context.dna.subseq(i..);
@@ -238,15 +248,15 @@ fn replace(context: &mut Context, template: Template, env: Environment) {
         match t {
             TItem::TBase(b) => r.app(b),
             TItem::Ref { n, l } => {
-//                let v = env.get(n).expect(&format!("Out of range! n: {:?} env: {:?}", n, env));
+                //                let v = env.get(n).expect(&format!("Out of range! n: {:?} env: {:?}", n, env));
                 let v = env.get(n).cloned().unwrap_or(Dna::empty());
                 r.concat(&protect(l, v))
-            },
+            }
             TItem::Len { n } => {
-//                let v = env.get(n).expect(&format!("Out of range! n: {:?} env: {:?}", n, env));
+                //                let v = env.get(n).expect(&format!("Out of range! n: {:?} env: {:?}", n, env));
                 let v = env.get(n).map(|d| d.len()).unwrap_or(0);
                 r.concat(&asnat(v))
-            },
+            }
         }
     }
     r.concat(&context.dna);
@@ -259,14 +269,16 @@ fn protect(l: usize, dna: Dna) -> Dna {
         dna
     } else {
         protect(l - 1, quote(dna))
-    }
+    };
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::fs::File;
+    use std::path::{PathBuf, Path};
     use Base::*;
-    
+
     #[test]
     fn slice_pattern_test() {
         let icfp = Dna::from_string("ICFP").unwrap();
@@ -274,7 +286,7 @@ mod tests {
             [C, ..] => 1,
             [I] => 2,
             [I, ..] => 3,
-            _ => 4
+            _ => 4,
         };
         assert_eq!(branch, 3);
     }
@@ -288,8 +300,10 @@ mod tests {
     fn pattern_test() {
         use PItem::*;
         assert_eq!(pattern_by_str("CIIC"), vec![PBase(I)]);
-        assert_eq!(pattern_by_str("IIPIPICPIICICIIF"),
-                   vec![Open, Skip { n: 2 }, Close, PBase(P)]);
+        assert_eq!(
+            pattern_by_str("IIPIPICPIICICIIF"),
+            vec![Open, Skip { n: 2 }, Close, PBase(P)]
+        );
     }
 
     fn do_step_by_str(s: &str) -> Dna {
@@ -300,11 +314,79 @@ mod tests {
 
     #[test]
     fn do_step_test() {
-        assert_eq!(do_step_by_str("IIPIPICPIICICIIFICCIFPPIICCFPC"),
-                   Dna::from_string("PICFC").unwrap());
-        assert_eq!(do_step_by_str("IIPIPICPIICICIIFICCIFCCCPPIICCFPC"),
-                   Dna::from_string("PIICCFCFFPC").unwrap());
-        assert_eq!(do_step_by_str("IIPIPIICPIICIICCIICFCFC"),
-                   Dna::from_string("I").unwrap());
+        assert_eq!(
+            do_step_by_str("IIPIPICPIICICIIFICCIFPPIICCFPC"),
+            Dna::from_string("PICFC").unwrap()
+        );
+        assert_eq!(
+            do_step_by_str("IIPIPICPIICICIIFICCIFCCCPPIICCFPC"),
+            Dna::from_string("PIICCFCFFPC").unwrap()
+        );
+        assert_eq!(
+            do_step_by_str("IIPIPIICPIICIICCIICFCFC"),
+            Dna::from_string("I").unwrap()
+        );
+    }
+
+    #[test]
+    fn multistep_test() {
+        #[derive(Eq, PartialEq, Debug, Serialize, Deserialize)]
+        struct TestData {
+            dna: String,
+            rna: Vec<String>,
+        }
+        
+        fn serrialize<P: AsRef<Path>>(path: P, data: &TestData) {
+            let config = ron::ser::PrettyConfig::new().with_depth_limit(4);
+            let file = std::fs::File::create(path.as_ref()).unwrap();
+            ron::ser::to_writer_pretty(
+                    std::io::BufWriter::new(file),
+                    &data,
+                    config,
+            ).unwrap();
+        }
+
+        let dna_path: PathBuf = ["data", "tests", "interpreter", "endo.dna"]
+            .iter()
+            .collect();
+        let dna_str = &std::fs::read_to_string(dna_path).unwrap();
+        let dna = Dna::from_string(dna_str).unwrap();
+        let mut context = Context::new(dna);
+        let step_to_iterate = 100;
+        let save_every = 10;
+        for step in 1..step_to_iterate {
+            do_step(&mut context);
+            if step % save_every == 0 {
+                let actual_test_data = TestData {
+                    dna: context.dna.to_string(),
+                    rna: context.rna.iter().map(|d| d.to_string()).collect(),
+                };
+                let test_data_path: PathBuf = [
+                    "data",
+                    "tests",
+                    "interpreter",
+                    "expected",
+                    format!("step_{}", step).as_str(),
+                ].iter().collect();
+                if test_data_path.exists() {
+                    let file = File::open(&test_data_path).unwrap();
+                    let expected_test_data: TestData =
+                        ron::de::from_reader(std::io::BufReader::new(file)).unwrap();
+                    if actual_test_data != expected_test_data {
+                        let unexpected_data_path: PathBuf = [
+                            "data",
+                            "tests",
+                            "interpreter",
+                            "unexpected",
+                            format!("step_{}", step).as_str(),
+                        ].iter().collect();
+                        serrialize(unexpected_data_path, &actual_test_data);
+                        panic!("Unexpected test data at step {}!", step);
+                    }
+                } else {
+                    serrialize(test_data_path, &actual_test_data);
+                }
+            }
+        }
     }
 }
