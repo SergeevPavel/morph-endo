@@ -1,20 +1,21 @@
-use crate::dna::{Dna, Base, Subseq};
+use crate::dna::{Dna, Base};
 use crate::decode::{Context};
 
-// TODO rewrite without recursion
+// recursion
+// is it possible to overflow usize?
 pub fn nat(context: &mut Context) -> Option<usize> {
     use Base::*;
-    return match context.dna.data.as_slice() {
+    return match context.dna.as_slice() {
         [P, ..] => {
-            context.dna = context.dna.subseq(1..);
+            context.dna.skip(1);
             Some(0)
         }
         [I, ..] | [F, ..] => {
-            context.dna = context.dna.subseq(1..);
+            context.dna.skip(1);
             nat(context).map(|n| n * 2)
         }
         [C, ..] => {
-            context.dna = context.dna.subseq(1..);
+            context.dna.skip(1);
             nat(context).map(|n| n * 2 + 1)
         }
         dna_tail => {
@@ -26,7 +27,6 @@ pub fn nat(context: &mut Context) -> Option<usize> {
     }
 }
 
-// rewritten without recursion
 pub fn asnat(mut n: usize) -> Dna {
     use Base::*;
     let mut result = Dna::empty();
@@ -42,42 +42,37 @@ pub fn asnat(mut n: usize) -> Dna {
     result
 }
 
-// TODO rewrite without recursion
 pub fn consts(context: &mut Context) -> Dna {
     use Base::*;
-    return match context.dna.data.as_slice() {
-        [C, ..] => {
-            context.dna = context.dna.subseq(1..);
-            let mut s = consts(context);
-            s.prep(I);
-            s
+    let mut result = Dna::empty();
+    loop {
+        match context.dna.as_slice() {
+            [C, ..] => {
+                context.dna.skip(1);
+                result.app(I);
+            }
+            [F, ..] => {
+                context.dna.skip(1);
+                result.app(C);
+            }
+            [P, ..] => {
+                context.dna.skip(1);
+                result.app(F);
+            }
+            [I, C, ..] => {
+                context.dna.skip(2);
+                result.app(P);
+            }
+            _ => break
         }
-        [F, ..] => {
-            context.dna = context.dna.subseq(1..);
-            let mut s = consts(context);
-            s.prep(C);
-            s
-        }
-        [P, ..] => {
-            context.dna = context.dna.subseq(1..);
-            let mut s = consts(context);
-            s.prep(F);
-            s
-        }
-        [I, C, ..] => {
-            context.dna = context.dna.subseq(2..);
-            let mut s = consts(context);
-            s.prep(P);
-            s
-        }
-        _ => Dna::empty()
     }
+    return result;
 }
 
 pub fn quote(dna: Dna) -> Dna {
     use Base::*;
     let mut result = Dna::empty();
-    for b in dna.data {
+    for b in dna.as_slice() {
         match b {
             I => result.app(C),
             C => result.app(F),
@@ -89,6 +84,13 @@ pub fn quote(dna: Dna) -> Dna {
         }
     }
     return result;
+}
+
+pub fn protect(l: usize, mut dna: Dna) -> Dna {
+    for _ in 0..l {
+        dna = quote(dna)
+    }
+    dna
 }
 
 #[cfg(test)]

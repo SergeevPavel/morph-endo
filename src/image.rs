@@ -85,7 +85,7 @@ pub enum DrawCommand {
 impl DrawCommand {
     pub fn decode(d: &Dna) -> Option<Self> {
         use crate::dna::Base::*;
-        match d.data.as_slice() {
+        match d.as_slice() {
             [P, I, P, I, I, I, C] => Some(DrawCommand::AddColor(Color::Rgb(Rgb::Black))),
             [P, I, P, I, I, I, P] => Some(DrawCommand::AddColor(Color::Rgb(Rgb::Red))),
             [P, I, P, I, I, C, C] => Some(DrawCommand::AddColor(Color::Rgb(Rgb::Green))),

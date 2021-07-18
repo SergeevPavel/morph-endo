@@ -1,9 +1,9 @@
 use serde::{Deserialize, Serialize};
 
 use crate::dna::{Base, Dna, Subseq};
-use crate::image::DrawCommand;
-use crate::literals::{asnat, consts, nat, quote};
+use crate::literals::{asnat, consts, nat, protect};
 use std::time::Instant;
+use crate::image::DrawCommand;
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Context {
@@ -15,7 +15,7 @@ pub struct Context {
 
 impl Context {
     fn append_rna(&mut self, rna: Dna) {
-        // println!("Draw command: {:?}", DrawCommand::decode(&rna));
+        println!("Draw command: {:?}", DrawCommand::decode(&rna));
         self.rna.push(rna);
     }
 }
@@ -68,25 +68,25 @@ fn pattern(context: &mut Context) -> Option<Pattern> {
     let mut p: Pattern = vec![];
     let mut lvl = 0;
     loop {
-        match context.dna.data.as_slice() {
+        match context.dna.as_slice() {
             [C, ..] => {
-                context.dna = context.dna.subseq(1..);
+                context.dna.skip(1);
                 p.push(PItem::PBase(I));
             }
             [F, ..] => {
-                context.dna = context.dna.subseq(1..);
+                context.dna.skip(1);
                 p.push(PItem::PBase(C));
             }
             [P, ..] => {
-                context.dna = context.dna.subseq(1..);
+                context.dna.skip(1);
                 p.push(PItem::PBase(F));
             }
             [I, C, ..] => {
-                context.dna = context.dna.subseq(2..);
+                context.dna.skip(2);
                 p.push(PItem::PBase(P));
             }
             [I, P, ..] => {
-                context.dna = context.dna.subseq(2..);
+                context.dna.skip(2);
                 if let Some(n) = nat(context) {
                     p.push(PItem::Skip { n });
                 } else {
@@ -94,17 +94,17 @@ fn pattern(context: &mut Context) -> Option<Pattern> {
                 }
             }
             [I, F, ..] => {
-                context.dna = context.dna.subseq(3..);
+                context.dna.skip(3);
                 let s = consts(context);
                 p.push(PItem::Search { s });
             }
             [I, I, P, ..] => {
-                context.dna = context.dna.subseq(3..);
+                context.dna.skip(3);
                 lvl += 1;
                 p.push(PItem::Open);
             }
             [I, I, C, ..] | [I, I, F, ..] => {
-                context.dna = context.dna.subseq(3..);
+                context.dna.skip(3);
                 if lvl == 0 {
                     return Some(p);
                 } else {
@@ -114,7 +114,7 @@ fn pattern(context: &mut Context) -> Option<Pattern> {
             }
             [I, I, I, ..] => {
                 context.append_rna(context.dna.subseq(3..10));
-                context.dna = context.dna.subseq(10..)
+                context.dna.skip(10);
             }
             dna_tail => {
                 context.finish_reason.push(
@@ -141,41 +141,41 @@ fn template(context: &mut Context) -> Option<Template> {
     use TItem::*;
     let mut template: Template = vec![];
     loop {
-        match context.dna.data.as_slice() {
+        match context.dna.as_slice() {
             [C, ..] => {
-                context.dna = context.dna.subseq(1..);
+                context.dna.skip(1);
                 template.push(TBase(I));
             }
             [F, ..] => {
-                context.dna = context.dna.subseq(1..);
+                context.dna.skip(1);
                 template.push(TBase(C));
             }
             [P, ..] => {
-                context.dna = context.dna.subseq(1..);
+                context.dna.skip(1);
                 template.push(TBase(F));
             }
             [I, C, ..] => {
-                context.dna = context.dna.subseq(2..);
+                context.dna.skip(2);
                 template.push(TBase(P));
             }
             [I, F, ..] | [I, P, ..] => {
-                context.dna = context.dna.subseq(2..);
+                context.dna.skip(2);
                 let l = nat(context)?;
                 let n = nat(context)?;
                 template.push(Ref { n, l });
             }
             [I, I, C, ..] | [I, I, F, ..] => {
-                context.dna = context.dna.subseq(3..);
+                context.dna.skip(3);
                 return Some(template);
             }
             [I, I, P, ..] => {
-                context.dna = context.dna.subseq(3..);
+                context.dna.skip(3);
                 let n = nat(context)?;
                 template.push(Len { n });
             }
             [I, I, I, ..] => {
                 context.append_rna(context.dna.subseq(3..10));
-                context.dna = context.dna.subseq(10..);
+                context.dna.skip(10);
             }
             dna_tail => {
                 context.finished = true;
@@ -220,7 +220,7 @@ fn matchreplace(context: &mut Context, pat: Pattern, template: Template) {
             }
             PItem::Search { s } => {
                 // todo handle errors in subslicing
-                if let Some(n) = find_subseq(&context.dna.data[i..], s.data.as_slice()) {
+                if let Some(n) = find_subseq(&context.dna.as_slice()[i..], s.as_slice()) {
                     i += n;
                 } else {
                     return;
@@ -238,7 +238,7 @@ fn matchreplace(context: &mut Context, pat: Pattern, template: Template) {
             }
         }
     }
-    context.dna = context.dna.subseq(i..);
+    context.dna.skip(i);
     replace(context, template, env);
 }
 
@@ -263,13 +263,6 @@ fn replace(context: &mut Context, template: Template, env: Environment) {
     context.dna = r;
 }
 
-fn protect(l: usize, mut dna: Dna) -> Dna {
-    for _ in 0..l {
-        dna = quote(dna)
-    }
-    dna
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -280,7 +273,7 @@ mod tests {
     #[test]
     fn slice_pattern_test() {
         let icfp = Dna::from_string("ICFP").unwrap();
-        let branch = match icfp.data.as_slice() {
+        let branch = match icfp.as_slice() {
             [C, ..] => 1,
             [I] => 2,
             [I, ..] => 3,

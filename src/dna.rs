@@ -7,7 +7,8 @@ pub enum Base {
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
 pub struct Dna {
-    pub data: Vec<Base>
+    data: Vec<Base>,
+    skipped: usize
 }
 
 impl Dna {
@@ -21,15 +22,24 @@ impl Dna {
                 other => Err(format!("Unexpected symbol {}", other).to_string())
             }
         }).collect();
-        return data.map(|data| Dna { data })
+        return data.map(|data| Dna { data, skipped: 0 })
+    }
+
+    pub fn as_slice(&self) -> &[Base] {
+        &self.data.as_slice()[self.skipped..]
     }
 
     pub fn empty() -> Dna {
-        Dna { data: vec![] }
+        Dna { data: vec![], skipped: 0 }
     }
 
-    pub fn prep(&mut self, b: Base) {
-        self.data.insert(0, b)
+    // pub fn prep(&mut self, b: Base) {
+    //     self.data.insert(0, b)
+    // }
+
+    pub fn skip(&mut self, k: usize) {
+        self.skipped += k;
+        assert!(self.skipped <= self.data.len())
     }
 
     pub fn app(&mut self, b: Base) {
@@ -37,15 +47,15 @@ impl Dna {
     }
 
     pub fn concat(&mut self, other: &Dna) {
-        self.data.extend_from_slice(&other.data)
+        self.data.extend_from_slice(&other.as_slice())
     }
 
     pub fn nth(&self, n: usize) -> Option<Base> {
-        self.data.get(n).map(|b| *b)
+        self.data.get(n + self.skipped).map(|b| *b)
     }
 
     pub fn len(&self) -> usize {
-        self.data.len()
+        self.data.len() - self.skipped
     }
 }
 
@@ -69,10 +79,10 @@ pub trait Subseq<Interval> {
 
 impl Subseq<std::ops::Range<usize>> for Dna {
     fn subseq(&self, interval: std::ops::Range<usize>) -> Dna {
-        let from = interval.start.max(0).min(self.data.len());
-        let to = interval.end.max(0).min(self.data.len());
+        let from = (interval.start + self.skipped).max(self.skipped).min(self.data.len());
+        let to = (interval.end + self.skipped).max(self.skipped).min(self.data.len());
         if from < to {
-            Dna { data: self.data[from..to].to_vec() }
+            Dna { data: self.data[from..to].to_vec(), skipped: 0 }
         } else {
             Dna::empty()
         }
@@ -81,9 +91,9 @@ impl Subseq<std::ops::Range<usize>> for Dna {
 
 impl Subseq<std::ops::RangeFrom<usize>> for Dna {
     fn subseq(&self, interval: std::ops::RangeFrom<usize>) -> Dna {
-        let from = interval.start.max(0);
+        let from = (interval.start + self.skipped).max(self.skipped);
         if from < self.data.len() {
-            Dna { data: self.data[from..].to_vec() }
+            Dna { data: self.data[from..].to_vec(), skipped: 0 }
         } else {
             Dna::empty()
         }
