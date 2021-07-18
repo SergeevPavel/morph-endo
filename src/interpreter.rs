@@ -16,11 +16,7 @@ fn interpreter_main() {
     store(&context, [&folder, "context.ron"].iter().collect::<PathBuf>());
 
     let commands: Vec<_> = context.rna.iter().filter_map(|dna| {
-        let command = DrawCommand::decode(dna);
-        if command.is_none() {
-            println!("Dna {:?}", dna);
-        }
-        command
+        DrawCommand::decode(dna)
     }).collect();
     store(&commands, [&folder, "commands.ron"].iter().collect::<PathBuf>());
 }

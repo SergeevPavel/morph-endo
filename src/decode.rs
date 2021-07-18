@@ -40,15 +40,18 @@ pub fn do_step(context: &mut Context) -> Option<()> {
 
 pub fn execute(context: &mut Context) {
     let stat_moment = Instant::now();
-    let mut _step = 0;
+    let mut step = 0;
     loop {
+        if step % 100 == 0 {
+            println!("Step {}", step);
+        }
         if let None = do_step(context) {
             println!("Finish with: {:?}", context.finish_reason);
         }
         if context.finished || stat_moment.elapsed().as_secs() > 300 {
             break;
         }
-        _step += 1;
+        step += 1;
     }
 }
 
@@ -198,7 +201,7 @@ fn find_subseq(source: &[Base], target: &[Base]) -> Option<usize> {
 }
 
 fn matchreplace(context: &mut Context, pat: Pattern, template: Template) {
-    println!("Pattern: {:?} Template: {:?}", pat, template);
+    // println!("Pattern: {:?} Template: {:?}", pat, template);
     let mut i: usize = 0;
     let mut env: Environment = vec![];
     //c is reversed

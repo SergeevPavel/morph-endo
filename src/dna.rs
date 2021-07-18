@@ -5,11 +5,19 @@ pub enum Base {
     I, C, F, P
 }
 
-#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Dna {
     data: Vec<Base>,
     skipped: usize
 }
+
+impl PartialEq for Dna {
+    fn eq(&self, other: &Self) -> bool {
+        self.as_slice() == other.as_slice()
+    }
+}
+
+impl Eq for Dna {}
 
 impl Dna {
     pub fn from_string(s: &str) -> Result<Dna, String> {
@@ -121,5 +129,18 @@ mod tests {
         assert_eq!(icfp.nth(6), None);
         assert_eq!(icfp.subseq(3..), dna("P"));
         assert_eq!(icfp.subseq(4..), Dna::empty());
+    }
+
+    #[test]
+    fn skip_test() {
+        use Base::*;
+        let mut sample = dna("ICFPICPF");
+        sample.skip(2);
+        assert_eq!(sample.nth(0), Some(F));
+        assert_eq!(sample.as_slice(), [F, P, I, C, P, F]);
+        assert_eq!(sample.subseq(0..100), dna("FPICPF"));
+        assert_eq!(sample.subseq(100..0), Dna::empty());
+        sample.concat(&sample.clone());
+        assert_eq!(sample, dna("FPICPFFPICPF"));
     }
 }
