@@ -69,7 +69,7 @@ impl Dna {
 
 impl std::fmt::Display for Dna {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        for b in &self.data {
+        for b in self.as_slice() {
             f.write_str(match b {
                 Base::I => "I",
                 Base::C => "C",
