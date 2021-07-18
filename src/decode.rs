@@ -15,7 +15,7 @@ pub struct Context {
 
 impl Context {
     fn append_rna(&mut self, rna: Dna) {
-        println!("Draw command: {:?}", DrawCommand::decode(&rna));
+        // println!("Draw command: {:?}", DrawCommand::decode(&rna));
         self.rna.push(rna);
     }
 }
@@ -263,13 +263,11 @@ fn replace(context: &mut Context, template: Template, env: Environment) {
     context.dna = r;
 }
 
-// rewrite without recursion
-fn protect(l: usize, dna: Dna) -> Dna {
-    return if l == 0 {
-        dna
-    } else {
-        protect(l - 1, quote(dna))
-    };
+fn protect(l: usize, mut dna: Dna) -> Dna {
+    for _ in 0..l {
+        dna = quote(dna)
+    }
+    dna
 }
 
 #[cfg(test)]
@@ -336,7 +334,7 @@ mod tests {
             rna: Vec<String>,
         }
         
-        fn serrialize<P: AsRef<Path>>(path: P, data: &TestData) {
+        fn serialize<P: AsRef<Path>>(path: P, data: &TestData) {
             let config = ron::ser::PrettyConfig::new().with_depth_limit(4);
             let file = std::fs::File::create(path.as_ref()).unwrap();
             ron::ser::to_writer_pretty(
@@ -355,7 +353,7 @@ mod tests {
         let step_to_iterate = 100;
         let save_every = 10;
         for step in 1..step_to_iterate {
-            do_step(&mut context);
+            do_step(&mut context).unwrap();
             if step % save_every == 0 {
                 let actual_test_data = TestData {
                     dna: context.dna.to_string(),
@@ -380,11 +378,11 @@ mod tests {
                             "unexpected",
                             format!("step_{}", step).as_str(),
                         ].iter().collect();
-                        serrialize(unexpected_data_path, &actual_test_data);
+                        serialize(unexpected_data_path, &actual_test_data);
                         panic!("Unexpected test data at step {}!", step);
                     }
                 } else {
-                    serrialize(test_data_path, &actual_test_data);
+                    serialize(test_data_path, &actual_test_data);
                 }
             }
         }

@@ -74,7 +74,6 @@ pub fn consts(context: &mut Context) -> Dna {
     }
 }
 
-// rewritten without recursion
 pub fn quote(dna: Dna) -> Dna {
     use Base::*;
     let mut result = Dna::empty();
