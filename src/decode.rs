@@ -3,7 +3,8 @@ use serde::{Deserialize, Serialize};
 use crate::dna::{Base, Dna, Subseq};
 use crate::literals::{asnat, consts, nat, protect};
 use std::time::Instant;
-use crate::image::DrawCommand;
+use std::collections::VecDeque;
+// use crate::image::DrawCommand;
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Context {
@@ -15,7 +16,7 @@ pub struct Context {
 
 impl Context {
     fn append_rna(&mut self, rna: Dna) {
-        println!("Draw command: {:?}", DrawCommand::decode(&rna));
+        // println!("Draw command: {:?}", DrawCommand::decode(&rna));
         self.rna.push(rna);
     }
 }
@@ -39,16 +40,16 @@ pub fn do_step(context: &mut Context) -> Option<()> {
 }
 
 pub fn execute(context: &mut Context) {
-    let stat_moment = Instant::now();
+    let start_at = Instant::now();
     let mut step = 0;
     loop {
         if step % 100 == 0 {
-            println!("Step {}", step);
+            println!("Step: {} Elapsed: {:?}", step, start_at.elapsed());
         }
         if let None = do_step(context) {
             println!("Finish with: {:?}", context.finish_reason);
         }
-        if context.finished || stat_moment.elapsed().as_secs() > 300 {
+        if context.finished || start_at.elapsed().as_secs() > 600 {
             break;
         }
         step += 1;
@@ -59,7 +60,7 @@ pub fn execute(context: &mut Context) {
 enum PItem {
     PBase(Base),
     Skip { n: usize },
-    Search { s: Dna },
+    Search { s: Vec<Base> },
     Open,
     Close,
 }
@@ -193,11 +194,20 @@ fn template(context: &mut Context) -> Option<Template> {
 
 type Environment = Vec<Dna>;
 
-fn find_subseq(source: &[Base], target: &[Base]) -> Option<usize> {
-    source
-        .windows(target.len())
-        .position(|window| window == target)
-        .map(|pos| pos + target.len())
+fn find_subseq(source: impl Iterator<Item = Base>, target: &[Base]) -> Option<usize> {
+    assert!(target.len() > 0);
+    let mut window = VecDeque::with_capacity(target.len());
+    for (idx, b) in source.enumerate() {
+        if window.len() >= target.len() {
+            window.pop_front();
+        }
+        window.push_back(b);
+        window.make_contiguous();
+        if window.as_slices().0 == target {
+            return Some(idx + 1);
+        }
+    }
+    return None;
 }
 
 fn matchreplace(context: &mut Context, pat: Pattern, template: Template) {
@@ -222,8 +232,7 @@ fn matchreplace(context: &mut Context, pat: Pattern, template: Template) {
                 }
             }
             PItem::Search { s } => {
-                // todo handle errors in subslicing
-                if let Some(n) = find_subseq(&context.dna.as_slice()[i..], s.as_slice()) {
+                if let Some(n) = find_subseq(context.dna.iter().skip(i), s.as_slice()) {
                     i += n;
                 } else {
                     return;
@@ -251,14 +260,14 @@ fn replace(context: &mut Context, template: Template, env: Environment) {
         match t {
             TItem::TBase(b) => r.app(b),
             TItem::Ref { n, l } => {
-                //                let v = env.get(n).expect(&format!("Out of range! n: {:?} env: {:?}", n, env));
+                // let v = env.get(n).expect(&format!("Out of range! n: {:?} env: {:?}", n, env));
                 let v = env.get(n).cloned().unwrap_or(Dna::empty());
-                r.concat(&protect(l, v))
+                r.concat(&protect(l, v.as_slice()).as_slice().into())
             }
             TItem::Len { n } => {
-                //                let v = env.get(n).expect(&format!("Out of range! n: {:?} env: {:?}", n, env));
+                // let v = env.get(n).expect(&format!("Out of range! n: {:?} env: {:?}", n, env));
                 let v = env.get(n).map(|d| d.len()).unwrap_or(0);
-                r.concat(&asnat(v))
+                r.concat(&asnat(v).as_slice().into())
             }
         }
     }
@@ -304,6 +313,29 @@ mod tests {
         let mut context = Context::new(Dna::from_string(s).unwrap());
         do_step(&mut context).expect("Step failed");
         context.dna
+    }
+
+    #[test]
+    fn find_subseq_test() {
+        use Base::*;
+        assert_eq!(find_subseq([I, C, F, P, I, C, F, P].iter().cloned(),
+                               &[F, P, I]),
+                   Some(5));
+        assert_eq!(find_subseq([I, C, F, P, I, C, F, P].iter().cloned(),
+                               &[F, F, I]),
+                   None);
+        assert_eq!(find_subseq([I, C, F, P, I, C, F, P].iter().cloned(),
+                               &[F, P, C]),
+                   None);
+        assert_eq!(find_subseq([I, C, F, P, I, C, F, P].iter().cloned(),
+                               &[F, I, C]),
+                   None);
+        assert_eq!(find_subseq([I, C, F, P, I, C, F, P].iter().cloned(),
+                               &[I, C]),
+                   Some(2));
+        assert_eq!(find_subseq([I, C, F, P, I, C, F, P].iter().cloned(),
+                               &[I, C, F, P, I, C, F, P]),
+                   Some(8));
     }
 
     #[test]

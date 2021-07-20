@@ -27,41 +27,41 @@ pub fn nat(context: &mut Context) -> Option<usize> {
     }
 }
 
-pub fn asnat(mut n: usize) -> Dna {
+pub fn asnat(mut n: usize) -> Vec<Base> {
     use Base::*;
-    let mut result = Dna::empty();
+    let mut result = Vec::new();
     while n != 0 {
         if n % 2 == 0 {
-            result.app(I);
+            result.push(I);
         } else {
-            result.app(C);
+            result.push(C);
         }
         n /= 2;
     }
-    result.app(P);
+    result.push(P);
     result
 }
 
-pub fn consts(context: &mut Context) -> Dna {
+pub fn consts(context: &mut Context) -> Vec<Base> {
     use Base::*;
-    let mut result = Dna::empty();
+    let mut result = Vec::new();
     loop {
         match context.dna.as_slice() {
             [C, ..] => {
                 context.dna.skip(1);
-                result.app(I);
+                result.push(I);
             }
             [F, ..] => {
                 context.dna.skip(1);
-                result.app(C);
+                result.push(C);
             }
             [P, ..] => {
                 context.dna.skip(1);
-                result.app(F);
+                result.push(F);
             }
             [I, C, ..] => {
                 context.dna.skip(2);
-                result.app(P);
+                result.push(P);
             }
             _ => break
         }
@@ -69,28 +69,29 @@ pub fn consts(context: &mut Context) -> Dna {
     return result;
 }
 
-pub fn quote(dna: Dna) -> Dna {
+pub fn quote(dna: &[Base]) -> Vec<Base> {
     use Base::*;
-    let mut result = Dna::empty();
-    for b in dna.as_slice() {
+    let mut result = Vec::new();
+    for b in dna {
         match b {
-            I => result.app(C),
-            C => result.app(F),
-            F => result.app(P),
+            I => result.push(C),
+            C => result.push(F),
+            F => result.push(P),
             P => {
-                result.app(I);
-                result.app(C);
+                result.push(I);
+                result.push(C);
             },
         }
     }
     return result;
 }
 
-pub fn protect(l: usize, mut dna: Dna) -> Dna {
+pub fn protect(l: usize, dna: &[Base]) -> Vec<Base> {
+    let mut result = dna.to_vec();
     for _ in 0..l {
-        dna = quote(dna)
+        result = quote(&result)
     }
-    dna
+    result
 }
 
 #[cfg(test)]
@@ -99,10 +100,10 @@ mod tests {
 
     fn check_quote_unquote(s: &str) {
         let origin = Dna::from_string(s).unwrap();
-        let quoted = quote(origin.clone());
-        let mut context = Context::new(quoted);
+        let quoted = quote(origin.as_slice());
+        let mut context = Context::new(quoted.as_slice().into());
         let transformed = consts(&mut context);
-        assert_eq!(origin, transformed);
+        assert_eq!(origin.as_slice(), transformed.as_slice());
         assert_eq!(context.dna.len(), 0);
     }
 
@@ -115,7 +116,7 @@ mod tests {
 
     fn check_asnat_nat(n: usize) {
         let origin = asnat(n);
-        let mut context = Context::new(origin);
+        let mut context = Context::new(origin.as_slice().into());
         let transformed = nat(&mut context);
         assert_eq!(Some(n), transformed);
         assert_eq!(context.dna.len(), 0);

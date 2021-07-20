@@ -65,6 +65,13 @@ impl Dna {
     pub fn len(&self) -> usize {
         self.data.len() - self.skipped
     }
+
+    pub fn iter(&self) -> DnaIterator {
+        DnaIterator {
+            dna: self,
+            offset: 0
+        }
+    }
 }
 
 impl std::fmt::Display for Dna {
@@ -78,6 +85,42 @@ impl std::fmt::Display for Dna {
             })?
         }
         Ok(())
+    }
+}
+
+impl From<&[Base]> for Dna {
+    fn from(source: &[Base]) -> Self {
+        Dna {
+            data: source.to_vec(),
+            skipped: 0
+        }
+    }
+}
+
+pub struct DnaIterator<'a> {
+    dna: &'a Dna,
+    offset: usize,
+}
+
+impl<'a> Iterator for DnaIterator<'a> {
+    type Item = Base;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        let item = self.dna.nth(self.offset);
+        self.offset += 1;
+        item
+    }
+}
+
+impl<'a> IntoIterator for &'a Dna {
+    type Item = Base;
+    type IntoIter = DnaIterator<'a>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        DnaIterator {
+            dna: self,
+            offset: 0
+        }
     }
 }
 
