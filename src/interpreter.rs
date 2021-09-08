@@ -7,6 +7,7 @@ use std::path::PathBuf;
 crate::entry_point!("interpreter", interpreter_main);
 fn interpreter_main() {
     let folder = std::env::args().nth(2).expect("Not enough arguments");
+    println!("interpreter v1: {}", folder);
     let dna_path = ["data", &folder, "dna"].iter().collect::<PathBuf>();
     let dna_str = &std::fs::read_to_string(dna_path).unwrap();
     let dna = Dna::from_string(dna_str).unwrap();
@@ -16,7 +17,7 @@ fn interpreter_main() {
     store(&context, [&folder, "context.ron"].iter().collect::<PathBuf>());
 
     let commands: Vec<_> = context.rna.iter().filter_map(|dna| {
-        DrawCommand::decode(dna)
+        DrawCommand::decode(dna.as_slice())
     }).collect();
     store(&commands, [&folder, "commands.ron"].iter().collect::<PathBuf>());
 }

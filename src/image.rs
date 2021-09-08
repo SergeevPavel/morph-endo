@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 use std::path::Path;
-use crate::dna::Dna;
+use crate::dna::Base;
 
 pub type Pixel = image::Rgba<u8>;
 
@@ -83,9 +83,9 @@ pub enum DrawCommand {
 }
 
 impl DrawCommand {
-    pub fn decode(d: &Dna) -> Option<Self> {
+    pub fn decode(d: &[Base]) -> Option<Self> {
         use crate::dna::Base::*;
-        match d.as_slice() {
+        match d {
             [P, I, P, I, I, I, C] => Some(DrawCommand::AddColor(Color::Rgb(Rgb::Black))),
             [P, I, P, I, I, I, P] => Some(DrawCommand::AddColor(Color::Rgb(Rgb::Red))),
             [P, I, P, I, I, C, C] => Some(DrawCommand::AddColor(Color::Rgb(Rgb::Green))),
@@ -96,7 +96,7 @@ impl DrawCommand {
             [P, I, P, I, I, P, C] => Some(DrawCommand::AddColor(Color::Rgb(Rgb::White))),
             [P, I, P, I, I, P, F] => Some(DrawCommand::AddColor(Color::Alpha(Alpha::Transparent))),
             [P, I, P, I, I, P, P] => Some(DrawCommand::AddColor(Color::Alpha(Alpha::Opaque))),
-        
+
             [P, I, I, P, I, C, P] => Some(DrawCommand::ClearBucket),
 
             [P, I, I, I, I, I, P] => Some(DrawCommand::Move),
@@ -105,7 +105,7 @@ impl DrawCommand {
 
             [P, C, C, I, F, F, P] => Some(DrawCommand::Mark),
             [P, F, F, I, C, C, P] => Some(DrawCommand::Line),
-            
+
             [P, I, I, P, I, I, P] => Some(DrawCommand::TryFill),
             [P, C, C, P, F, F, P] => Some(DrawCommand::AddBitmap),
             [P, F, F, P, C, C, P] => Some(DrawCommand::Clip),

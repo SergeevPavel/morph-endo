@@ -7,6 +7,7 @@ mod literals;
 mod image;
 mod interpreter;
 mod drawer;
+mod interpreterv2;
 
 
 #[linkme::distributed_slice]

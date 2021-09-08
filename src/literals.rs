@@ -1,4 +1,4 @@
-use crate::dna::{Dna, Base};
+use crate::dna::{Base};
 use crate::decode::{Context};
 
 // recursion
@@ -97,6 +97,7 @@ pub fn protect(l: usize, dna: &[Base]) -> Vec<Base> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::dna::Dna;
 
     fn check_quote_unquote(s: &str) {
         let origin = Dna::from_string(s).unwrap();

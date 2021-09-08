@@ -7,6 +7,7 @@ use serde::{Deserialize, Serialize};
 use crate::image::{Color, DrawCommand, Pixel};
 use crate::utils::load;
 use std::path::PathBuf;
+use std::fs::create_dir_all;
 
 #[derive(Debug, Clone, Copy, Eq, PartialEq, Serialize, Deserialize)]
 struct Position {
@@ -293,10 +294,18 @@ impl Drawer {
 crate::entry_point!("drawer", drawer_main);
 fn drawer_main() {
     let folder = std::env::args().nth(2).expect("Not enough arguments");
-    let commands: Vec<DrawCommand> = load([&folder, "commands.ron"].iter().collect::<PathBuf>());
+    let commands: Vec<DrawCommand> = load([&folder, "commandsv2.ron"].iter().collect::<PathBuf>());
     let mut drawer = Drawer::new();
-    for command in commands {
+    let images_dir = ["data", &folder, "images"].iter().collect::<PathBuf>();
+    if images_dir.exists() {
+        std::fs::remove_dir_all(&images_dir).unwrap();
+    }
+    std::fs::create_dir_all(&images_dir).unwrap();
+    for (idx, command) in commands.into_iter().enumerate() {
         drawer.apply(command);
+        if idx % 100 == 0 {
+            drawer.bitmaps.last().unwrap().save(images_dir.join(format!("image_{}.png", idx))).unwrap();
+        }
     }
     // drawer.bitmaps.last_mut().unwrap().fill(Position {x : 0, y: 0},  Rgba([0, 0, 0, 255]));
     drawer.bitmaps.last().unwrap().save(["data", &folder, "result.png"].iter().collect::<PathBuf>()).unwrap();

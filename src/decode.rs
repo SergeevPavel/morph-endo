@@ -15,13 +15,6 @@ pub struct Context {
 }
 
 impl Context {
-    fn append_rna(&mut self, rna: Dna) {
-        // println!("Draw command: {:?}", DrawCommand::decode(&rna));
-        self.rna.push(rna);
-    }
-}
-
-impl Context {
     pub fn new(dna: Dna) -> Self {
         Context {
             dna,
@@ -30,6 +23,12 @@ impl Context {
             finish_reason: vec![],
         }
     }
+
+    fn append_rna(&mut self, rna: Dna) {
+        // println!("Draw command: {:?}", DrawCommand::decode(&rna));
+        self.rna.push(rna);
+    }
+
 }
 
 pub fn do_step(context: &mut Context) -> Option<()> {
