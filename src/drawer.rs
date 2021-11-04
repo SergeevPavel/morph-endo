@@ -7,7 +7,6 @@ use serde::{Deserialize, Serialize};
 use crate::image::{Color, DrawCommand, Pixel};
 use crate::utils::load;
 use std::path::PathBuf;
-use std::fs::create_dir_all;
 
 #[derive(Debug, Clone, Copy, Eq, PartialEq, Serialize, Deserialize)]
 struct Position {
@@ -294,7 +293,7 @@ impl Drawer {
 crate::entry_point!("drawer", drawer_main);
 fn drawer_main() {
     let folder = std::env::args().nth(2).expect("Not enough arguments");
-    let commands: Vec<DrawCommand> = load([&folder, "commandsv2.ron"].iter().collect::<PathBuf>());
+    let commands: Vec<DrawCommand> = load([&folder, "commands.ron"].iter().collect::<PathBuf>());
     let mut drawer = Drawer::new();
     let images_dir = ["data", &folder, "images"].iter().collect::<PathBuf>();
     if images_dir.exists() {

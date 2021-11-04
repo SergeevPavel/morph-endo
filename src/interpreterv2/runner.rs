@@ -24,5 +24,5 @@ fn interpreterv2_main() {
      let commands: Vec<_> = context.rna.iter().filter_map(|dna| {
          DrawCommand::decode(dna)
      }).collect();
-     store(&commands, [&folder, "commandsv2.ron"].iter().collect::<PathBuf>());
+     store(&commands, [&folder, "commands.ron"].iter().collect::<PathBuf>());
 }

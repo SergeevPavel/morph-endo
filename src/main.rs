@@ -8,6 +8,7 @@ mod image;
 mod interpreter;
 mod drawer;
 mod interpreterv2;
+mod gui;
 
 
 #[linkme::distributed_slice]

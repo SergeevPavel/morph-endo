@@ -1,6 +1,6 @@
 use std::collections::VecDeque;
 
-use crate::interpreterv2::interpreter::{Context, InterpreterResult};
+use crate::interpreterv2::interpreter::{Context};
 use crate::interpreterv2::pattern::{Pattern, PItem};
 use crate::interpreterv2::template::{Template, TItem};
 
