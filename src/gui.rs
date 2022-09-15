@@ -30,6 +30,15 @@ impl EndoApp {
             drawer: Drawer::new()
         }
     }
+
+    fn reload_bitmaps(&mut self, ctx: &egui::Context) {
+        let mut drawer = Drawer::new();
+        drawer.apply_all(&self.commands[0..self.current_command]);
+        self.images.clear();
+        for bitmap in drawer.bitmaps {
+            self.images.push(load_image(ctx, &bitmap));
+        }
+    }
 }
 
 fn load_image(ctx: &egui::Context, image: &RgbaImage) -> GuiImage {
@@ -50,18 +59,23 @@ fn load_image(ctx: &egui::Context, image: &RgbaImage) -> GuiImage {
 }
 
 impl eframe::App for EndoApp {
-
     fn update(&mut self, ctx: &egui::Context, frame: &mut eframe::Frame) {
         for event in &ctx.input().events {
             match event {
                 Event::Key { key: Key::Space, pressed: true, .. } => {
-                    self.images.push(load_image(ctx, &load_source().unwrap()));
+                    self.reload_bitmaps(ctx);
                 }
                 Event::Key { key: Key::ArrowDown, pressed: true, modifiers } => {
-                    self.current_command += 1;
+                    if self.current_command < self.commands.len() - 1 {
+                        self.current_command += 1;
+                    }
+                    self.reload_bitmaps(ctx);
                 }
                 Event::Key { key: Key::ArrowUp, pressed: true, modifiers } => {
-                    self.current_command -= 1;
+                    if self.current_command > 0 {
+                        self.current_command -= 1;
+                    }
+                    self.reload_bitmaps(ctx);
                 }
                 _ => {}
             }
@@ -77,6 +91,11 @@ impl eframe::App for EndoApp {
                 if let Some(image) = self.images.first() {
                     ui.image(&image.texture_handle, [image.width, image.height]);
                 }
+                if let Some(other_images) = self.images.get(1..) {
+                    for image in other_images {
+                        ui.image(&image.texture_handle, [image.width / 4f32, image.height / 4f32]);
+                    }
+                }
 
                 ScrollArea::vertical()
                     .auto_shrink([false, false])
@@ -85,8 +104,8 @@ impl eframe::App for EndoApp {
                             for row in row_range {
                                 let command_str = format!("{:?}", self.commands[row]);
                                 if row == self.current_command {
-                                    let responce = ui.label(RichText::new(command_str).color(Color32::RED));
-                                    responce.scroll_to_me(Some(egui::Align::Center));
+                                    let response = ui.label(RichText::new(command_str).color(Color32::RED));
+                                    response.scroll_to_me(Some(egui::Align::Center));
                                 } else {
                                     ui.label(command_str);
                                 }
@@ -100,7 +119,7 @@ impl eframe::App for EndoApp {
 
 crate::entry_point!("gui", gui_main, _EP_GUI);
 fn gui_main() {
-    let commands = crate::utils::load(["endo", "commands.ron"].iter().collect::<PathBuf>());
+    let commands = crate::utils::load(["ex2", "commands.ron"].iter().collect::<PathBuf>());
     let app = EndoApp::new(commands);
     let native_options = eframe::NativeOptions {
         always_on_top: false,

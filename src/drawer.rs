@@ -139,7 +139,7 @@ pub struct Drawer {
     mark: Position,
     direction: Direction,
     // reversed stack
-    bitmaps: Vec<RgbaImage>,
+    pub bitmaps: Vec<RgbaImage>,
     max_x: i32,
     max_y: i32,
 }
@@ -286,6 +286,12 @@ impl Drawer {
                     self.bitmaps.last_mut().unwrap().clip(&top);
                 }
             }
+        }
+    }
+
+    pub fn apply_all(&mut self, commands: &[DrawCommand]) {
+        for command in commands {
+            self.apply(*command)
         }
     }
 }
