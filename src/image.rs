@@ -67,7 +67,7 @@ pub enum Color {
     Alpha(Alpha)
 }
 
-#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, Eq, PartialEq, Serialize, Deserialize)]
 pub enum DrawCommand {
     AddColor(Color),
     ClearBucket,

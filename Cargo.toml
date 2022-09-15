@@ -17,8 +17,8 @@ serde_json = "1.0"
 ron = "0.6.4"
 xi-rope = "0.3.0"
 
-eframe = "0.14.0"
-egui_glium = "0.14.0"
+eframe = "0.19.0"
+egui_extras = { version = "0.19.0", features = ["image"] }
 
 
 [[bin]]
