@@ -1,3 +1,4 @@
+use std::cmp::{max, min};
 use std::path::{PathBuf};
 
 use eframe::{egui::{self, Color32, Event, Key, ScrollArea, ColorImage, TextureHandle, RichText}, HardwareAcceleration, Theme};
@@ -102,26 +103,20 @@ impl eframe::App for EndoApp {
                             ui.image(&image.texture_handle, [image.width / 4f32, image.height / 4f32]);
                         }
                     }
-
-                    ScrollArea::vertical()
-                        .auto_shrink([false, false])
-                        // .vertical_scroll_offset(self.current_command as f32 * row_height)
-                        .show_rows(ui, row_height, num_rows, |ui, row_range| {
-                            ui.vertical(|ui| {
-                                for row in row_range {
-                                    let command_str = format!("{:?}", self.commands[row]);
-                                    if row == self.current_command {
-                                        let response = ui.label(RichText::new(command_str).color(Color32::RED));
-                                        response.scroll_to_me(Some(egui::Align::Center));
-                                    } else {
-                                        ui.label(command_str);
-                                    }
-                                }
-                            })
-                        });
+                    ui.vertical(|ui| {
+                        let r = max(0, self.current_command.saturating_sub(10))..min(self.commands.len(), self.current_command + 10);
+                        for row in r {
+                            let command_str = format!("{:?}", self.commands[row]);
+                            if row == self.current_command {
+                                ui.label(RichText::new(command_str).color(Color32::RED));
+                            } else {
+                                ui.label(command_str);
+                            }
+                        }
+                    });
                 });
 
-                if ui.add(DragValue::new(&mut self.current_command)).dragged() {
+                if ui.add(Slider::new(&mut self.current_command, 0..=(self.commands.len() - 1))).dragged() {
                     self.reload_bitmaps(ctx);
                 }
             })
