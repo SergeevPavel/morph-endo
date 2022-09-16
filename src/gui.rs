@@ -1,6 +1,7 @@
 use std::path::{PathBuf};
 
 use eframe::{egui::{self, Color32, Event, Key, ScrollArea, ColorImage, TextureHandle, RichText}, HardwareAcceleration, Theme};
+use eframe::egui::{DragValue, Slider};
 use image::RgbaImage;
 
 use crate::{drawer::Drawer, image::DrawCommand};
@@ -31,9 +32,10 @@ impl EndoApp {
 
     fn reload_bitmaps(&mut self, ctx: &egui::Context) {
         let drawer_state_index = self.current_command + 1;
-        for _ in self.drawer_states.len()..(drawer_state_index + 1) {
-            let mut drawer_state = self.drawer_states.last().unwrap().clone();
-            drawer_state.apply(self.commands[self.current_command]);
+        while self.drawer_states.len() <= drawer_state_index {
+            let i = self.drawer_states.len() - 1;
+            let mut drawer_state = self.drawer_states[i].clone();
+            drawer_state.apply(self.commands[i]);
             self.drawer_states.push(drawer_state);
         }
         let drawer = &self.drawer_states[drawer_state_index];
@@ -88,34 +90,41 @@ impl eframe::App for EndoApp {
             let text_style = egui::TextStyle::Body;
             let row_height = ui.text_style_height(&text_style);
             let num_rows = self.commands.len();
-            ui.horizontal(|ui| {
-                ui.expand_to_include_y(500f32);
+            ui.vertical(|ui| {
+                ui.horizontal(|ui| {
+                    ui.expand_to_include_y(500f32);
 
-                if let Some(image) = self.images.first() {
-                    ui.image(&image.texture_handle, [image.width, image.height]);
-                }
-                if let Some(other_images) = self.images.get(1..) {
-                    for image in other_images {
-                        ui.image(&image.texture_handle, [image.width / 4f32, image.height / 4f32]);
+                    if let Some(image) = self.images.first() {
+                        ui.image(&image.texture_handle, [image.width, image.height]);
                     }
-                }
+                    if let Some(other_images) = self.images.get(1..) {
+                        for image in other_images {
+                            ui.image(&image.texture_handle, [image.width / 4f32, image.height / 4f32]);
+                        }
+                    }
 
-                ScrollArea::vertical()
-                    .auto_shrink([false, false])
-                    .show_rows(ui, row_height, num_rows, |ui, row_range| {
-                        ui.vertical(|ui| {
-                            for row in row_range {
-                                let command_str = format!("{:?}", self.commands[row]);
-                                if row == self.current_command {
-                                    let response = ui.label(RichText::new(command_str).color(Color32::RED));
-                                    response.scroll_to_me(Some(egui::Align::Center));
-                                } else {
-                                    ui.label(command_str);
+                    ScrollArea::vertical()
+                        .auto_shrink([false, false])
+                        // .vertical_scroll_offset(self.current_command as f32 * row_height)
+                        .show_rows(ui, row_height, num_rows, |ui, row_range| {
+                            ui.vertical(|ui| {
+                                for row in row_range {
+                                    let command_str = format!("{:?}", self.commands[row]);
+                                    if row == self.current_command {
+                                        let response = ui.label(RichText::new(command_str).color(Color32::RED));
+                                        response.scroll_to_me(Some(egui::Align::Center));
+                                    } else {
+                                        ui.label(command_str);
+                                    }
                                 }
-                            }
-                        })
-                    });
-            });
+                            })
+                        });
+                });
+
+                if ui.add(DragValue::new(&mut self.current_command)).dragged() {
+                    self.reload_bitmaps(ctx);
+                }
+            })
         });
     }
 }
