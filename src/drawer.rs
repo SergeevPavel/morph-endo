@@ -7,6 +7,7 @@ use serde::{Deserialize, Serialize};
 use crate::image::{Color, DrawCommand, Pixel};
 use crate::utils::load;
 use std::path::PathBuf;
+use std::rc::Rc;
 
 #[derive(Debug, Clone, Copy, Eq, PartialEq, Serialize, Deserialize)]
 struct Position {
@@ -139,7 +140,7 @@ pub struct Drawer {
     mark: Position,
     direction: Direction,
     // reversed stack
-    pub bitmaps: Vec<RgbaImage>,
+    pub bitmaps: Rc<Vec<RgbaImage>>,
     max_x: i32,
     max_y: i32,
 }
@@ -172,7 +173,7 @@ fn current_pixel(bucket: &Vec<Color>) -> Pixel {
             Color::Rgb(rgb) => {
                 Some(rgb.encode()[1])
             }
-            _ => None
+            Color::Alpha(_) => None
         }
     }).collect();
     let blues: Vec<_> = bucket.iter().filter_map(|color| {
@@ -205,7 +206,7 @@ impl Drawer {
             position: Position { x: 0, y: 0},
             mark: Position { x: 0, y: 0},
             direction: Direction::East,
-            bitmaps: vec![empty_bitmap(max_x, max_y)],
+            bitmaps: Rc::new(vec![empty_bitmap(max_x, max_y)]),
             max_x,
             max_y,
         }
@@ -262,28 +263,33 @@ impl Drawer {
             }
             DrawCommand::Line => {
                 let current_pixel = self.current_pixel();
-                self.bitmaps.last_mut().unwrap().draw_line(self.position, self.mark,
-                                                           current_pixel);
+                Rc::make_mut(&mut self.bitmaps)
+                    .last_mut().unwrap()
+                    .draw_line(self.position, self.mark, current_pixel);
             }
             DrawCommand::TryFill => {
                 let current_pixel = self.current_pixel();
-                self.bitmaps.last_mut().unwrap().fill(self.position, current_pixel);
+                Rc::make_mut(&mut self.bitmaps)
+                    .last_mut().unwrap()
+                    .fill(self.position, current_pixel);
             }
             DrawCommand::AddBitmap => {
                 if self.bitmaps.len() < 10 {
-                    self.bitmaps.push(empty_bitmap(self.max_x, self.max_y));
+                    Rc::make_mut(&mut self.bitmaps).push(empty_bitmap(self.max_x, self.max_y));
                 }
             }
             DrawCommand::Compose => {
                 if self.bitmaps.len() >= 2 {
-                    let top = self.bitmaps.pop().unwrap();
-                    self.bitmaps.last_mut().unwrap().compose(&top);
+                    let bitmaps = Rc::make_mut(&mut self.bitmaps);
+                    let top = bitmaps.pop().unwrap();
+                    bitmaps.last_mut().unwrap().compose(&top);
                 }
             }
             DrawCommand::Clip => {
                 if self.bitmaps.len() >= 2 {
-                    let top = self.bitmaps.pop().unwrap();
-                    self.bitmaps.last_mut().unwrap().clip(&top);
+                    let bitmaps = Rc::make_mut(&mut self.bitmaps);
+                    let top = bitmaps.pop().unwrap();
+                    bitmaps.last_mut().unwrap().clip(&top);
                 }
             }
         }

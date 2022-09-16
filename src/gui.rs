@@ -1,11 +1,9 @@
 use std::path::{PathBuf};
 
-use eframe::{AppCreator, egui::{self, Color32, Event, Key, Label, ScrollArea, TextStyle, TextureId}, HardwareAcceleration, Theme};
-use eframe::egui::{ColorImage, TextureHandle, RichText};
+use eframe::{egui::{self, Color32, Event, Key, ScrollArea, ColorImage, TextureHandle, RichText}, HardwareAcceleration, Theme};
 use image::RgbaImage;
 
 use crate::{drawer::Drawer, image::DrawCommand};
-use crate::image::load_source;
 
 struct GuiImage {
     texture_handle: TextureHandle,
@@ -18,7 +16,7 @@ pub struct EndoApp {
 
     commands: Vec<DrawCommand>,
     current_command: usize,
-    drawer: Drawer,
+    drawer_states: Vec<Drawer>,
 }
 
 impl EndoApp {
@@ -27,15 +25,20 @@ impl EndoApp {
             images: Vec::new(),
             commands,
             current_command: 0,
-            drawer: Drawer::new()
+            drawer_states: vec![Drawer::new()]
         }
     }
 
     fn reload_bitmaps(&mut self, ctx: &egui::Context) {
-        let mut drawer = Drawer::new();
-        drawer.apply_all(&self.commands[0..self.current_command]);
+        let drawer_state_index = self.current_command + 1;
+        for _ in self.drawer_states.len()..(drawer_state_index + 1) {
+            let mut drawer_state = self.drawer_states.last().unwrap().clone();
+            drawer_state.apply(self.commands[self.current_command]);
+            self.drawer_states.push(drawer_state);
+        }
+        let drawer = &self.drawer_states[drawer_state_index];
         self.images.clear();
-        for bitmap in drawer.bitmaps {
+        for bitmap in drawer.bitmaps.iter() {
             self.images.push(load_image(ctx, &bitmap));
         }
     }
@@ -59,19 +62,19 @@ fn load_image(ctx: &egui::Context, image: &RgbaImage) -> GuiImage {
 }
 
 impl eframe::App for EndoApp {
-    fn update(&mut self, ctx: &egui::Context, frame: &mut eframe::Frame) {
+    fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         for event in &ctx.input().events {
             match event {
                 Event::Key { key: Key::Space, pressed: true, .. } => {
                     self.reload_bitmaps(ctx);
                 }
-                Event::Key { key: Key::ArrowDown, pressed: true, modifiers } => {
+                Event::Key { key: Key::ArrowDown, pressed: true, modifiers: _ } => {
                     if self.current_command < self.commands.len() - 1 {
                         self.current_command += 1;
                     }
                     self.reload_bitmaps(ctx);
                 }
-                Event::Key { key: Key::ArrowUp, pressed: true, modifiers } => {
+                Event::Key { key: Key::ArrowUp, pressed: true, modifiers: _ } => {
                     if self.current_command > 0 {
                         self.current_command -= 1;
                     }
@@ -120,7 +123,6 @@ impl eframe::App for EndoApp {
 crate::entry_point!("gui", gui_main, _EP_GUI);
 fn gui_main() {
     let commands = crate::utils::load(["ex2", "commands.ron"].iter().collect::<PathBuf>());
-    let app = EndoApp::new(commands);
     let native_options = eframe::NativeOptions {
         always_on_top: false,
         maximized: false,
@@ -144,5 +146,9 @@ fn gui_main() {
         default_theme: Theme::Dark,
         run_and_return: false
     };
-    eframe::run_native("Endo", native_options, Box::new(|_cc| Box::new(app)))
+    eframe::run_native("Endo", native_options, Box::new(|cc| {
+        let mut app = EndoApp::new(commands);
+        app.reload_bitmaps(&cc.egui_ctx);
+        Box::new(app)
+    }))
 }
