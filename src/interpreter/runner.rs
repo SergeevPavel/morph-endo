@@ -1,9 +1,9 @@
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::time::Instant;
 
 use crate::image::DrawCommand;
-use crate::interpreterv2::dna::Dna;
-use crate::interpreterv2::interpreter::{Context, do_all_steps, do_step};
+use crate::interpreter::dna::Dna;
+use crate::interpreter::interpreter::{Context, do_all_steps, do_step};
 use crate::utils::{load, store};
 
 pub fn run_with_logs(context: &mut Context) {
@@ -24,8 +24,8 @@ pub fn run_with_logs(context: &mut Context) {
     }
 }
 
-crate::entry_point!("interpreterv2", interpreterv2_main);
-fn interpreterv2_main() {
+crate::entry_point!("interpreter", interpreter_main);
+fn interpreter_main() {
     let folder = std::env::args().nth(2).expect("Not enough arguments");
     let dna_path = ["data", &folder, "dna"].iter().collect::<PathBuf>();
     let dna_str = &std::fs::read_to_string(dna_path).unwrap();
@@ -51,8 +51,14 @@ fn produce_draw_commands(dna: Dna) -> Vec<DrawCommand> {
 
 #[test]
 fn health_check_test() {
-    let health_check_dna = Dna::from_string(&std::fs::read_to_string("data/health_check/dna").unwrap()).unwrap();
-    let actual_commands = produce_draw_commands(health_check_dna);
-    let expected_commands: Vec<DrawCommand> = load("health_check/commands.ron");
-    assert_eq!(expected_commands, actual_commands);
+    fn check_for<P: AsRef<Path>, S: AsRef<str>>(example_path: P, example_name: S) {
+        let health_check_dna = Dna::from_string(&std::fs::read_to_string(example_path.as_ref().join("dna")).unwrap()).unwrap();
+        let start_time = Instant::now();
+        let actual_commands = produce_draw_commands(health_check_dna);
+        println!("{} took: {:?}", example_name.as_ref(), start_time.elapsed());
+        let expected_commands: Vec<DrawCommand> = load(example_path.as_ref().join("commands.ron"));
+        assert_eq!(expected_commands, actual_commands);
+    }
+    check_for("data/health_check", "Health check");
+    check_for("data/repair_guide", "Repair guide");
 }

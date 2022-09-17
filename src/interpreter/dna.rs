@@ -1,5 +1,16 @@
-use crate::interpreterv2::rope::{Seq};
-pub use crate::dna::Base;
+use crate::interpreter::rope::{Seq};
+use serde::{Serialize, Deserialize};
+
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Serialize, Deserialize)]
+pub enum Base {
+    I, C, F, P
+}
+
+impl Default for Base {
+    fn default() -> Self {
+        Base::I
+    }
+}
 
 pub type ShortDna = Vec<Base>;
 

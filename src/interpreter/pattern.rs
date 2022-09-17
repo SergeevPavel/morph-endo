@@ -1,6 +1,6 @@
-use crate::interpreterv2::dna::Base;
-use crate::interpreterv2::interpreter::{Context, InterpreterResult};
-use crate::interpreterv2::literals::*;
+use crate::interpreter::dna::Base;
+use crate::interpreter::interpreter::{Context, InterpreterResult};
+use crate::interpreter::literals::*;
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub enum PItem {

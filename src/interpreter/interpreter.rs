@@ -1,6 +1,6 @@
 use crate::image::DrawCommand;
-use crate::interpreterv2::dna::{Dna, ShortDna};
-use crate::interpreterv2::match_replace::replace;
+use crate::interpreter::dna::{Dna, ShortDna};
+use crate::interpreter::match_replace::replace;
 
 use super::{match_replace::match_pat, pattern::pattern, template::template};
 

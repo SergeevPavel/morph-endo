@@ -1,13 +1,9 @@
 #![allow(dead_code)]
 
-mod dna;
-mod decode;
 mod utils;
-mod literals;
 mod image;
-mod interpreter;
 mod drawer;
-mod interpreterv2;
+mod interpreter;
 mod gui;
 
 

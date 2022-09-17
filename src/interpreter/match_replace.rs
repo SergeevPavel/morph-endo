@@ -1,8 +1,8 @@
 use std::collections::VecDeque;
 
-use crate::interpreterv2::interpreter::{Context};
-use crate::interpreterv2::pattern::{Pattern, PItem};
-use crate::interpreterv2::template::{Template, TItem};
+use crate::interpreter::interpreter::{Context};
+use crate::interpreter::pattern::{Pattern, PItem};
+use crate::interpreter::template::{Template, TItem};
 
 use super::dna::{Base, Dna};
 use super::literals::{asnat, protect};

@@ -305,7 +305,7 @@ impl Drawer {
 crate::entry_point!("drawer", drawer_main);
 fn drawer_main() {
     let folder = std::env::args().nth(2).expect("Not enough arguments");
-    let commands: Vec<DrawCommand> = load([&folder, "commands.ron"].iter().collect::<PathBuf>());
+    let commands: Vec<DrawCommand> = load(["data", &folder, "commands.ron"].iter().collect::<PathBuf>());
     let mut drawer = Drawer::new();
     let images_dir = ["data", &folder, "images"].iter().collect::<PathBuf>();
     if images_dir.exists() {

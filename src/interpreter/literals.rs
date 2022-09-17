@@ -1,5 +1,5 @@
-use crate::interpreterv2::interpreter::{Context, InterpreterResult};
-use crate::interpreterv2::dna::{Base, ShortDna};
+use crate::interpreter::interpreter::{Context, InterpreterResult};
+use crate::interpreter::dna::{Base, ShortDna};
 
 // recursion
 // is it possible to overflow usize?

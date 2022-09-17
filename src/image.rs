@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 use std::path::Path;
-use crate::dna::Base;
+use crate::interpreter::dna::Base;
 
 pub type Pixel = image::Rgba<u8>;
 
@@ -84,7 +84,7 @@ pub enum DrawCommand {
 
 impl DrawCommand {
     pub fn decode(d: &[Base]) -> Option<Self> {
-        use crate::dna::Base::*;
+        use crate::interpreter::dna::Base::*;
         match d {
             [P, I, P, I, I, I, C] => Some(DrawCommand::AddColor(Color::Rgb(Rgb::Black))),
             [P, I, P, I, I, I, P] => Some(DrawCommand::AddColor(Color::Rgb(Rgb::Red))),

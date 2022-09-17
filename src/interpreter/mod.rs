@@ -1,7 +1,7 @@
 
 mod rope;
 mod interpreter;
-mod dna;
+pub mod dna;
 mod pattern;
 mod runner;
 mod literals;
