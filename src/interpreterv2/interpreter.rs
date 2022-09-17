@@ -1,9 +1,8 @@
-use std::time::Instant;
-
+use crate::image::DrawCommand;
 use crate::interpreterv2::dna::{Dna, ShortDna};
-
-use super::{pattern::pattern, template::template, match_replace::match_pat};
 use crate::interpreterv2::match_replace::replace;
+
+use super::{match_replace::match_pat, pattern::pattern, template::template};
 
 pub type InterpreterResult<T> = Result<T, String>;
 
@@ -25,6 +24,12 @@ impl Context {
     pub fn append_rna(&mut self, rna: ShortDna) {
         self.rna.push(rna);
     }
+
+    pub fn draw_commands(&self) -> Vec<DrawCommand> {
+        self.rna.iter().filter_map(|dna| {
+            DrawCommand::decode(dna)
+        }).collect()
+    }
 }
 
 pub fn do_step(context: &mut Context) -> InterpreterResult<()> {
@@ -36,20 +41,10 @@ pub fn do_step(context: &mut Context) -> InterpreterResult<()> {
     return Ok(());
 }
 
-pub fn execute(context: &mut Context) {
-    let start_at = Instant::now();
-    let mut step = 0;
+pub fn do_all_steps(context: &mut Context) -> String {
     loop {
-        if step % 100 == 0 {
-            println!("Step: {} Elapsed: {:?}", step, start_at.elapsed());
+        if let Err(reason_to_stop) = do_step(context) {
+            return reason_to_stop
         }
-        if let Err(err) = do_step(context) {
-            println!("Finish with: {:?}", err);
-            break;
-        }
-       if start_at.elapsed().as_secs() > 600 {
-           break;
-       }
-        step += 1;
     }
 }

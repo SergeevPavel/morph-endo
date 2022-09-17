@@ -1,8 +1,8 @@
 use std::cmp::{max, min};
 use std::path::{PathBuf};
 
-use eframe::{egui::{self, Color32, Event, Key, ScrollArea, ColorImage, TextureHandle, RichText}, HardwareAcceleration, Theme};
-use eframe::egui::{DragValue, Slider};
+use eframe::{egui::{self, Color32, Event, Key, ColorImage, TextureHandle, RichText}, HardwareAcceleration, Theme};
+use eframe::egui::{Slider};
 use image::RgbaImage;
 
 use crate::{drawer::Drawer, image::DrawCommand};
@@ -88,9 +88,6 @@ impl eframe::App for EndoApp {
         }
 
         egui::CentralPanel::default().show(ctx, |ui| {
-            let text_style = egui::TextStyle::Body;
-            let row_height = ui.text_style_height(&text_style);
-            let num_rows = self.commands.len();
             ui.vertical(|ui| {
                 ui.horizontal(|ui| {
                     ui.expand_to_include_y(500f32);
