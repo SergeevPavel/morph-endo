@@ -126,7 +126,7 @@ impl eframe::App for EndoApp {
 
 crate::entry_point!("gui", gui_main, _EP_GUI);
 fn gui_main() {
-    let commands = crate::utils::load(["ex2", "commands.ron"].iter().collect::<PathBuf>());
+    let commands = crate::utils::load(["repair_topics", "commands.ron"].iter().collect::<PathBuf>());
     let native_options = eframe::NativeOptions {
         always_on_top: false,
         maximized: false,

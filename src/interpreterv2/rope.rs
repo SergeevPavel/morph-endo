@@ -4,54 +4,81 @@ use std::marker::PhantomData;
 use std::cmp::{min};
 use xi_rope::interval::IntervalBounds;
 
+const MIN_LEAF: usize = 511;
+const MAX_LEAF: usize = 1024;
+
 #[derive(Clone)]
-pub struct SeqLeaf<T> where T: Clone {
-    data: Vec<T>
+pub struct SeqLeaf<T> where T: Clone, T: Default {
+    used: usize,
+    data: [T; MAX_LEAF]
 }
 
-impl <T> Default for SeqLeaf<T> where T: Clone {
+impl <T> SeqLeaf<T> where T: Clone + Copy + Default {
+    pub fn from_slice(source: &[T]) -> Self where T: Default {
+        let mut leaf = SeqLeaf::default();
+        leaf.extend(source);
+        leaf
+    }
+
+    pub fn extend(&mut self, source: &[T]) {
+        let source_len = source.len();
+        self.data[self.used..(self.used + source_len)].clone_from_slice(source);
+        self.used += source_len;
+    }
+
+    pub fn shrink(&mut self, new_size: usize) -> &[T] {
+        let rest = &self.data[new_size..self.used];
+        self.used = new_size;
+        return rest
+    }
+}
+
+impl <T> Default for SeqLeaf<T> where T: Clone + Copy + Default {
     fn default() -> Self {
+
         SeqLeaf {
-            data: Vec::new()
+            used: 0,
+            data: [T::default(); MAX_LEAF]
         }
     }
 }
 
-const MIN_LEAF: usize = 511;
-const MAX_LEAF: usize = 1024;
-
-impl <T> Leaf for SeqLeaf<T> where T: Clone {
+impl <T> Leaf for SeqLeaf<T> where T: Clone +Copy + Default {
     fn len(&self) -> usize {
-        self.data.len()
+        self.used
     }
 
     fn is_ok_child(&self) -> bool {
-        self.data.len() >= MIN_LEAF
+        self.used >= MIN_LEAF
     }
 
-    fn push_maybe_split(&mut self, other: &Self, iv: Interval) -> Option<Self> {
+    fn push_maybe_split(&mut self, other: &Self, iv: Interval) -> Option<Self>  {
         let (start, end) = iv.start_end();
-        self.data.extend(other.data[start..end].iter().cloned());
-        if self.len() <= MAX_LEAF {
+        if self.used + iv.size() <= MAX_LEAF {
+            self.extend(&other.data[start..end]);
             None
         } else {
-            let splitpoint = min(MAX_LEAF, self.data.len() - MIN_LEAF);
-            let right_leaf = SeqLeaf { data: self.data[splitpoint..].to_vec() };
-            self.data.truncate(splitpoint);
-            self.data.shrink_to_fit();
-            Some(right_leaf)
+            let new_left_leaf_size = min(MAX_LEAF, self.used + iv.size() - MIN_LEAF);
+            if new_left_leaf_size > self.used {
+                let splitpoint = new_left_leaf_size - self.used;
+                self.extend(&other.data[start..(start + splitpoint)]);
+                let right_leaf = SeqLeaf::from_slice(&other.data[(start + splitpoint)..end]);
+                Some(right_leaf)
+            } else {
+                let mut right_leaf = SeqLeaf::from_slice(self.shrink(new_left_leaf_size));
+                right_leaf.extend(&other.data[start..end]);
+                Some(right_leaf)
+            }
         }
     }
 }
 
 #[derive(Clone, Copy)]
 pub struct SeqInfo<'a, T> {
-    // TODO get rid of size?
-    // size: usize,
     phantom: PhantomData<&'a T>
 }
 
-impl <T> NodeInfo for SeqInfo<'_, T> where T: Clone {
+impl <T> NodeInfo for SeqInfo<'_, T> where T: Clone + Copy + Default {
     type L = SeqLeaf<T>;
 
     fn accumulate(&mut self, _other: &Self) {
@@ -71,14 +98,14 @@ impl <T> NodeInfo for SeqInfo<'_, T> where T: Clone {
 }
 
 #[derive(Clone)]
-pub struct Seq<T>(Node<SeqInfo<'static, T>>) where T: Clone + 'static;
+pub struct Seq<T>(Node<SeqInfo<'static, T>>) where T: Clone + Copy + Default + 'static;
 
-pub struct SeqIter<'a, T> where T: Clone + 'static {
+pub struct SeqIter<'a, T> where T: Clone + Copy + Default + 'static {
     offset: usize,
     cursor: xi_rope::Cursor<'a, SeqInfo<'static, T>>,
 }
 
-impl<'a, T> IntoIterator for &'a Seq<T> where T: Clone {
+impl<'a, T> IntoIterator for &'a Seq<T> where T: Clone + Copy + Default {
     type Item = &'a T;
     type IntoIter = SeqIter<'a, T>;
 
@@ -90,7 +117,7 @@ impl<'a, T> IntoIterator for &'a Seq<T> where T: Clone {
     }
 }
 
-impl<'a, T> Iterator for SeqIter<'a, T> where T: Clone {
+impl<'a, T> Iterator for SeqIter<'a, T> where T: Clone + Copy + Default {
     type Item = &'a T;
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -110,12 +137,12 @@ impl<'a, T> Iterator for SeqIter<'a, T> where T: Clone {
     }
 }
 
-impl <T> Seq<T> where T: Clone {
+impl <T> Seq<T> where T: Clone + Copy + Default {
     pub fn from_slice(mut v: &[T]) -> Seq<T> {
         let mut b: TreeBuilder<SeqInfo<'static, T>> = TreeBuilder::new();
         if v.len() <= MAX_LEAF {
             if !v.is_empty() {
-                b.push_leaf(SeqLeaf { data: v.to_vec() });
+                b.push_leaf(SeqLeaf::from_slice(&v));
             }
             return Seq(b.build());
         }
@@ -125,7 +152,7 @@ impl <T> Seq<T> where T: Clone {
             } else {
                 v.len()
             };
-            b.push_leaf(SeqLeaf { data: v[..splitpoint].to_vec() });
+            b.push_leaf(SeqLeaf::from_slice(&v[..splitpoint]));
             v = &v[splitpoint..];
         }
         Seq(b.build())

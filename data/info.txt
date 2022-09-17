@@ -1,0 +1,18 @@
+endo:
+IIPIFFCPICFPPICIICCIICIPPPFIIC -> fuun field repair guide
+
+fuun field repair guide:
+IPIFFCPICFPPICIICCIICIPPPFIIC -> IPIFFCPICFPPICIICCIICIPPPFIIC [fixed point]
+IIPIFFCPICFPPICIICCCIICIPPPCFIIC -> repair topics catalog
+IIPIFFCPICPCIICICIICIPPPPIIC -> rotate planet
+
+repair topics catalog:
+IPIFFCPICFPPICIICCIICIPPPFIIC -> fuun field repair guide
+
+
+???
+IIPIFFCPICICIICPIICIPPPICIIC -> health check
+
+
+health check:
+IIPIFFCPICFPPICIICCIICIPPPFIIC -> fuun field repair guide

@@ -5,6 +5,12 @@ pub enum Base {
     I, C, F, P
 }
 
+impl Default for Base {
+    fn default() -> Self {
+        Base::I
+    }
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Dna {
     data: Vec<Base>,
