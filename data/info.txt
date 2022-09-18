@@ -14,7 +14,7 @@ IIPIFFCPICICIICPIICIPPPICIIC -> health check
 *health check:
 IIPIFFCPICFPPICIICCIICIPPPFIIC -> fuun field repair guide
 
-*repair topics catalog:
+*repair topics catalog: IIPIFFCPICFPPICIICCCIICIPPPCFIIC
 IPIFFCPICFPPICIICCIICIPPPFIIC -> fuun field repair guide
 
 Repair guide navigation
@@ -29,11 +29,17 @@ b1...b_n
 bi = C if the ith least-significant bit is set
 bi = I otherwise
 
-Catalog page index
-1337
+Catalog page index  IIPIFFCPICFPP[]PPCFIIC
+1337 => CIICCCIICICP
+626  => ICIICCCIICIP
 Happy navigating
 
 
 <blink>WARNING</blink>
 REVERSAL may occur!
 Don't change the length of integers, or TOTAL PROTONIC
+
+*catalog page index IIPIFFCPICFPPCIICCCIICICPPPCFIIC
+
+===================
+IIPIFFCPICFPPICIICCCIICIPPPCFIIC

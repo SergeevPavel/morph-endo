@@ -152,6 +152,7 @@ impl eframe::App for EndoApp {
 crate::entry_point!("gui", gui_main, _EP_GUI);
 fn gui_main() {
     let folder = std::env::args().nth(2).expect("Not enough arguments");
+    println!("Gui for: {}", folder);
     let commands = crate::utils::load(["cache", &folder, "commands.ron"].iter().collect::<PathBuf>());
     let native_options = eframe::NativeOptions {
         always_on_top: false,

@@ -91,3 +91,11 @@ pub fn nat(context: &mut Context) -> InterpreterResult<usize> {
      }
      return Dna::from_slice(&result);
  }
+
+#[test]
+fn asnat_test() {
+    println!("{:?}", asnat(7331));
+    let mut context = Context::new(Dna::from_string("ICIICCCIICIP").unwrap());
+    let n = nat(&mut context);
+    println!("{:?}", n);
+}

@@ -1,10 +1,10 @@
-use std::path::{PathBuf};
+use std::path::{Path, PathBuf};
 use std::time::Instant;
 
 use crate::image::DrawCommand;
 use crate::interpreter::dna::Dna;
 use crate::interpreter::interpreter::{Context, do_all_steps, do_step};
-use crate::utils::{store};
+use crate::utils::{load, store};
 
 pub fn run_with_logs(context: &mut Context) {
     let start_at = Instant::now();
@@ -24,15 +24,17 @@ pub fn run_with_logs(context: &mut Context) {
     }
 }
 
+fn read_dna<P: AsRef<Path>>(path: P) -> Dna {
+    let dna_str = &std::fs::read_to_string(path).unwrap();
+    return Dna::from_string(&dna_str).unwrap();
+}
+
 crate::entry_point!("interpreter", interpreter_main);
 fn interpreter_main() {
+    let endo_dna = read_dna("data/endo/dna");
     let folder = std::env::args().nth(2).expect("Not enough arguments");
-    let dna_path = ["data", &folder, "dna"].iter().collect::<PathBuf>();
-    let dna_str = &std::fs::read_to_string(dna_path).unwrap();
-    let dna = Dna::from_string(&dna_str).unwrap();
-
-    let mut context = Context::new(dna);
-
+    let prefix_dna = read_dna(["data", &folder, "dna"].iter().collect::<PathBuf>());
+    let mut context = Context::new(prefix_dna.concat(&endo_dna));
     run_with_logs(&mut context);
 
 //     store(&context, [&folder, "context.ron"].iter().collect::<PathBuf>());
