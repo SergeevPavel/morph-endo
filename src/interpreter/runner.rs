@@ -10,11 +10,11 @@ pub fn run_with_logs(context: &mut Context) {
     let start_at = Instant::now();
     let mut step = 0;
     loop {
-        if step % 1000 == 0 {
+        if step % 10000 == 0 {
             println!("Step: {} Elapsed: {:?}", step, start_at.elapsed());
         }
         if let Err(err) = do_step(context) {
-            println!("Finish with: {:?}", err);
+            println!("Finish with: {:?} on {:?}", err, step);
             break;
         }
         if start_at.elapsed().as_secs() > 600 {
@@ -38,14 +38,17 @@ fn dna_for_task<S: AsRef<str>>(task: S) -> Dna {
 crate::entry_point!("interpreter", interpreter_main);
 fn interpreter_main() {
     let task = std::env::args().nth(2).expect("Not enough arguments");
+    println!("Run interpreter on {}", task);
     let mut context = Context::new(dna_for_task(&task));
     run_with_logs(&mut context);
 
 //     store(&context, [&folder, "context.ron"].iter().collect::<PathBuf>());
 
+    println!("Produced: {} operations", context.rna.len());
     let commands: Vec<_> = context.rna.iter().filter_map(|dna| {
         DrawCommand::decode(dna)
     }).collect();
+    println!("Valid: {} commands", commands.len());
     store(&commands, [&task, "commands.ron"].iter().collect::<PathBuf>());
 }
 

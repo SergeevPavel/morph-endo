@@ -307,19 +307,21 @@ fn drawer_main() {
     let folder = std::env::args().nth(2).expect("Not enough arguments");
     let commands: Vec<DrawCommand> = load(["data", &folder, "commands.ron"].iter().collect::<PathBuf>());
     let mut drawer = Drawer::new();
-    let images_dir = ["data", &folder, "images"].iter().collect::<PathBuf>();
-    if images_dir.exists() {
-        std::fs::remove_dir_all(&images_dir).unwrap();
-    }
-    std::fs::create_dir_all(&images_dir).unwrap();
+    // let images_dir = ["cache", &folder, "images"].iter().collect::<PathBuf>();
+    // if images_dir.exists() {
+    //     std::fs::remove_dir_all(&images_dir).unwrap();
+    // }
+    // std::fs::create_dir_all(&images_dir).unwrap();
     for (idx, command) in commands.into_iter().enumerate() {
         drawer.apply(command);
-        if idx % 100 == 0 {
-            drawer.bitmaps.last().unwrap().save(images_dir.join(format!("image_{}.png", idx))).unwrap();
-        }
+        // if idx % 100 == 0 {
+        //     drawer.bitmaps.last().unwrap().save(images_dir.join(format!("image_{}.png", idx))).unwrap();
+        // }
     }
     // drawer.bitmaps.last_mut().unwrap().fill(Position {x : 0, y: 0},  Rgba([0, 0, 0, 255]));
-    drawer.bitmaps.last().unwrap().save(["data", &folder, "result.png"].iter().collect::<PathBuf>()).unwrap();
+    for (idx, bitmap) in drawer.bitmaps.iter().enumerate() {
+        bitmap.save(["cache", &folder, &format!("result{}.png", idx)].iter().collect::<PathBuf>()).unwrap();
+    }
 }
 
 
