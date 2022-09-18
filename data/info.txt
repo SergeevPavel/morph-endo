@@ -1,18 +1,39 @@
-endo:
+*endo:
 IIPIFFCPICFPPICIICCIICIPPPFIIC -> fuun field repair guide
 
-fuun field repair guide:
+*fuun field repair guide:
 IPIFFCPICFPPICIICCIICIPPPFIIC -> IPIFFCPICFPPICIICCIICIPPPFIIC [fixed point]
 IIPIFFCPICFPPICIICCCIICIPPPCFIIC -> repair topics catalog
 IIPIFFCPICPCIICICIICIPPPPIIC -> rotate planet
 
-repair topics catalog:
-IPIFFCPICFPPICIICCIICIPPPFIIC -> fuun field repair guide
 
-
-???
+*???
 IIPIFFCPICICIICPIICIPPPICIIC -> health check
 
 
-health check:
+*health check:
 IIPIFFCPICFPPICIICCIICIPPPFIIC -> fuun field repair guide
+
+*repair topics catalog:
+IPIFFCPICFPPICIICCIICIPPPFIIC -> fuun field repair guide
+
+Repair guide navigation
+Access repair guide topics by taking an existing repair guide prefix
+and replacing the encoded integer with the encoding of the integer
+of the desired repair guide page
+
+
+Encoding of positive n-bit integers
+b1...b_n
+
+bi = C if the ith least-significant bit is set
+bi = I otherwise
+
+Catalog page index
+1337
+Happy navigating
+
+
+<blink>WARNING</blink>
+REVERSAL may occur!
+Don't change the length of integers, or TOTAL PROTONIC

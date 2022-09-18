@@ -10,7 +10,7 @@ pub fn run_with_logs(context: &mut Context) {
     let start_at = Instant::now();
     let mut step = 0;
     loop {
-        if step % 100 == 0 {
+        if step % 1000 == 0 {
             println!("Step: {} Elapsed: {:?}", step, start_at.elapsed());
         }
         if let Err(err) = do_step(context) {

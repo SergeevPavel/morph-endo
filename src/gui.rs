@@ -15,6 +15,7 @@ struct GuiImage {
 
 pub struct EndoApp {
     images: Vec<GuiImage>,
+    current_image: Option<usize>,
 
     commands: Vec<DrawCommand>,
     current_command: usize,
@@ -26,6 +27,7 @@ impl EndoApp {
         EndoApp {
             images: Vec::new(),
             commands,
+            current_image: None,
             current_command: 0,
             drawer_states: vec![Drawer::new()]
         }
@@ -43,6 +45,16 @@ impl EndoApp {
         self.images.clear();
         for bitmap in drawer.bitmaps.iter() {
             self.images.push(load_image(ctx, &bitmap));
+        }
+        self.select_image(|id| id);
+    }
+
+    fn select_image<F: FnOnce(usize) -> usize>(&mut self, f: F) {
+        if self.images.len() == 0 {
+            self.current_image = None;
+        } else {
+            let idx = self.current_image.map(f).unwrap_or(0);
+            self.current_image = Some(idx.max(0).min(self.images.len() - 1))
         }
     }
 }
@@ -71,17 +83,33 @@ impl eframe::App for EndoApp {
                 Event::Key { key: Key::Space, pressed: true, .. } => {
                     self.reload_bitmaps(ctx);
                 }
-                Event::Key { key: Key::ArrowDown, pressed: true, modifiers: _ } => {
-                    if self.current_command < self.commands.len() - 1 {
-                        self.current_command += 1;
+                Event::Key { key: Key::ArrowDown, pressed: true, modifiers } => {
+                    let step = if modifiers.shift {
+                        100
+                    } else {
+                        1
+                    };
+                    if self.current_command < self.commands.len() - step {
+                        self.current_command += step;
                     }
                     self.reload_bitmaps(ctx);
                 }
-                Event::Key { key: Key::ArrowUp, pressed: true, modifiers: _ } => {
-                    if self.current_command > 0 {
-                        self.current_command -= 1;
+                Event::Key { key: Key::ArrowUp, pressed: true, modifiers } => {
+                    let step = if modifiers.shift {
+                        100
+                    } else {
+                        1
+                    };
+                    if self.current_command >= step {
+                        self.current_command -= step;
                     }
                     self.reload_bitmaps(ctx);
+                }
+                Event::Key { key: Key::ArrowLeft, pressed: true, modifiers: _ } => {
+                    self.select_image(|id| id.saturating_sub(1));
+                }
+                Event::Key { key: Key::ArrowRight, pressed: true, modifiers: _ } => {
+                    self.select_image(|id| id.saturating_add(1));
                 }
                 _ => {}
             }
@@ -92,13 +120,13 @@ impl eframe::App for EndoApp {
                 ui.horizontal(|ui| {
                     ui.expand_to_include_y(500f32);
 
-                    if let Some(image) = self.images.first() {
-                        ui.image(&image.texture_handle, [image.width, image.height]);
-                    }
-                    if let Some(other_images) = self.images.get(1..) {
-                        for image in other_images {
-                            ui.image(&image.texture_handle, [image.width / 4f32, image.height / 4f32]);
-                        }
+                    for (id, image) in self.images.iter().enumerate() {
+                        let down_scale = if self.current_image == Some(id) {
+                            1f32
+                        } else {
+                            4f32
+                        };
+                        ui.image(&image.texture_handle, [image.width / down_scale, image.height / down_scale]);
                     }
                     ui.vertical(|ui| {
                         let r = max(0, self.current_command.saturating_sub(10))..min(self.commands.len(), self.current_command + 10);
@@ -123,7 +151,8 @@ impl eframe::App for EndoApp {
 
 crate::entry_point!("gui", gui_main, _EP_GUI);
 fn gui_main() {
-    let commands = crate::utils::load(["cache", "repair_topics", "commands.ron"].iter().collect::<PathBuf>());
+    let folder = std::env::args().nth(2).expect("Not enough arguments");
+    let commands = crate::utils::load(["cache", &folder, "commands.ron"].iter().collect::<PathBuf>());
     let native_options = eframe::NativeOptions {
         always_on_top: false,
         maximized: false,
