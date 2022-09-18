@@ -55,16 +55,23 @@ fn produce_draw_commands(dna: Dna) -> Vec<DrawCommand> {
     return context.draw_commands();
 }
 
+fn check_for<P: AsRef<str>, S: AsRef<str>>(task: P, task_name: S) {
+    let dna = dna_for_task(&task);
+    let start_time = Instant::now();
+    let actual_commands = produce_draw_commands(dna);
+    println!("{} took: {:?}", task_name.as_ref(), start_time.elapsed());
+    let expected_commands: Vec<DrawCommand> = load(["data", task.as_ref(), "commands.ron"].iter().collect::<PathBuf>());
+    assert_eq!(expected_commands, actual_commands);
+}
+
 #[test]
 fn health_check_test() {
-    fn check_for<P: AsRef<str>, S: AsRef<str>>(task: P, task_name: S) {
-        let dna = dna_for_task(&task);
-        let start_time = Instant::now();
-        let actual_commands = produce_draw_commands(dna);
-        println!("{} took: {:?}", task_name.as_ref(), start_time.elapsed());
-        let expected_commands: Vec<DrawCommand> = load(["data", task.as_ref(), "commands.ron"].iter().collect::<PathBuf>());
-        assert_eq!(expected_commands, actual_commands);
-    }
     check_for("health_check", "Health check");
     check_for("repair_guide", "Repair guide");
+}
+
+#[test]
+fn bench() {
+    //65.00281809s
+    check_for("repair_topics", "Repair topics");
 }

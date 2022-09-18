@@ -1,4 +1,5 @@
-use crate::interpreter::rope::{Seq};
+use std::iter::Skip;
+use crate::interpreter::rope::{MAX_LEAF, Seq, SeqIter};
 use serde::{Serialize, Deserialize};
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Serialize, Deserialize)]
@@ -16,7 +17,8 @@ pub type ShortDna = Vec<Base>;
 
 #[derive(Clone)]
 pub struct Dna {
-    pub seq: Seq<Base>
+    skipped: usize,
+    seq: Seq<Base>
 }
 
 impl std::fmt::Debug for Dna {
@@ -31,7 +33,7 @@ impl std::fmt::Debug for Dna {
 
 impl Dna {
     pub fn empty() -> Self {
-        Dna { seq: Seq::from_slice(&[]) }
+        Dna { skipped: 0, seq: Seq::from_slice(&[]) }
     }
 
     pub fn from_string(s: &str) -> Result<Self, String> {
@@ -45,12 +47,13 @@ impl Dna {
             }
         }).collect();
         Ok(Dna{
+            skipped: 0,
             seq: Seq::from_slice(data?.as_slice())
         })
     }
 
     pub fn from_slice(s: &[Base]) -> Self {
-        Dna { seq: Seq::from_slice(s) }
+        Dna { skipped: 0, seq: Seq::from_slice(s) }
     }
 
     pub fn prefix(&self, size: usize) -> Vec<Base> {
@@ -58,19 +61,24 @@ impl Dna {
     }
 
     pub fn skip(&mut self, count: usize) {
-        self.seq = self.seq.subseq(count..);
+        self.skipped += count;
+        if self.skipped > MAX_LEAF {
+            self.seq = self.seq.subseq(self.skipped..);
+            self.skipped = 0;
+        }
     }
 
     pub fn to_vec(&self, range: std::ops::Range<usize>) -> Vec<Base> {
         self.seq.into_iter()
-        .skip(range.start)
-        .take(range.count())
-        .cloned()
-        .collect()
+            .skip(self.skipped)
+            .skip(range.start)
+            .take(range.count())
+            .cloned()
+            .collect()
     }
 
     pub fn nth(&self, idx: usize) -> Option<Base> {
-        self.seq.nth(idx).cloned()
+        self.seq.nth(idx + self.skipped).cloned()
     }
 
     pub fn len(&self) -> usize {
@@ -78,11 +86,21 @@ impl Dna {
     }
 
     pub fn subseq(&self, range: std::ops::Range<usize>) -> Dna {
-        Dna { seq: self.seq.subseq(range) }
+        let seq = self.seq.subseq(self.skipped..).subseq(range);
+        Dna { seq, skipped: 0 }
     }
 
     pub fn concat(&self, other: &Self) -> Self {
-        Dna { seq: self.seq.concat(&other.seq) }
+        Dna { skipped: 0, seq: self.seq.subseq(self.skipped..).concat(&other.seq.subseq(other.skipped..)) }
+    }
+}
+
+impl <'a> IntoIterator for &'a Dna {
+    type Item = &'a Base;
+    type IntoIter = Skip<SeqIter<'a, Base>>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.seq.into_iter().skip(self.skipped)
     }
 }
 

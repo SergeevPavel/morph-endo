@@ -46,7 +46,7 @@ pub fn match_pat(context: &mut Context, pat: Pattern) -> Option<Environment> {
                 }
             }
             PItem::Search { s } => {
-                if let Some(n) = find_subseq(context.dna.seq.into_iter().skip(i).cloned(), s.as_slice()) {
+                if let Some(n) = find_subseq(context.dna.into_iter().skip(i).cloned(), s.as_slice()) {
                     i += n;
                 } else {
                     return None;
