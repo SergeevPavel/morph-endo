@@ -1,5 +1,6 @@
+use std::mem::swap;
 use crate::interpreter::interpreter::{Context, InterpreterResult};
-use crate::interpreter::dna::{Base, ShortDna};
+use crate::interpreter::dna::{Base, Dna, ShortDna};
 
 // recursion
 // is it possible to overflow usize?
@@ -66,27 +67,27 @@ pub fn nat(context: &mut Context) -> InterpreterResult<usize> {
      return result;
  }
 
- pub fn quote(dna: &[Base]) -> ShortDna {
-     use Base::*;
-     let mut result = Vec::new();
-     for b in dna {
-         match b {
-             I => result.push(C),
-             C => result.push(F),
-             F => result.push(P),
-             P => {
-                 result.push(I);
-                 result.push(C);
-             },
-         }
-     }
-     return result;
- }
+ pub fn protect(l: usize, dna: &Dna) -> Dna {
+     if l == 0 { return dna.clone(); }
 
- pub fn protect(l: usize, dna: &[Base]) -> ShortDna {
-     let mut result = dna.to_vec();
+     let mut result = dna.to_vec(0..dna.len());
+     let mut next_vec = Vec::with_capacity(dna.len() * 2);
      for _ in 0..l {
-         result = quote(&result)
+         next_vec.clear();
+
+         use Base::*;
+         for b in &result {
+             match *b {
+                 I => next_vec.push(C),
+                 C => next_vec.push(F),
+                 F => next_vec.push(P),
+                 P => {
+                     next_vec.push(I);
+                     next_vec.push(C);
+                 },
+             }
+         }
+         swap(&mut result, &mut next_vec);
      }
-     result
+     return Dna::from_slice(&result);
  }

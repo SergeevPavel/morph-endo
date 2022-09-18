@@ -1,10 +1,10 @@
-use std::path::{Path, PathBuf};
+use std::path::{PathBuf};
 use std::time::Instant;
 
 use crate::image::DrawCommand;
 use crate::interpreter::dna::Dna;
 use crate::interpreter::interpreter::{Context, do_all_steps, do_step};
-use crate::utils::{load, store};
+use crate::utils::{store};
 
 pub fn run_with_logs(context: &mut Context) {
     let start_at = Instant::now();

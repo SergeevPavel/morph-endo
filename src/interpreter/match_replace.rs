@@ -76,8 +76,9 @@ pub fn replace(context: &mut Context, template: Template, env: Environment) {
                 r = r.concat(&Dna::from_slice(&[b]));
             }
             TItem::Ref { n, l } => {
-                let v = env.get(n).cloned().unwrap_or(Dna::empty());
-                r = r.concat(&Dna::from_slice(&protect(l, &v.to_vec(0..v.len()))))
+                if let Some(v) = env.get(n) {
+                    r = r.concat(&protect(l, v))
+                }
             }
             TItem::Len { n } => {
                 let v = env.get(n).map(|d| d.len()).unwrap_or(0);
