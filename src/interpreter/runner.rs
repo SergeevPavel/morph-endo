@@ -29,12 +29,16 @@ fn read_dna<P: AsRef<Path>>(path: P) -> Dna {
     return Dna::from_string(&dna_str).unwrap();
 }
 
+fn dna_for_task<S: AsRef<str>>(task: S) -> Dna {
+    let endo_dna = read_dna("data/endo/dna");
+    let prefix_dna = read_dna(["data", task.as_ref(), "dna"].iter().collect::<PathBuf>());
+    return prefix_dna.concat(&endo_dna);
+}
+
 crate::entry_point!("interpreter", interpreter_main);
 fn interpreter_main() {
-    let endo_dna = read_dna("data/endo/dna");
-    let folder = std::env::args().nth(2).expect("Not enough arguments");
-    let prefix_dna = read_dna(["data", &folder, "dna"].iter().collect::<PathBuf>());
-    let mut context = Context::new(prefix_dna.concat(&endo_dna));
+    let task = std::env::args().nth(2).expect("Not enough arguments");
+    let mut context = Context::new(dna_for_task(&task));
     run_with_logs(&mut context);
 
 //     store(&context, [&folder, "context.ron"].iter().collect::<PathBuf>());
@@ -42,7 +46,7 @@ fn interpreter_main() {
     let commands: Vec<_> = context.rna.iter().filter_map(|dna| {
         DrawCommand::decode(dna)
     }).collect();
-    store(&commands, [&folder, "commands.ron"].iter().collect::<PathBuf>());
+    store(&commands, [&task, "commands.ron"].iter().collect::<PathBuf>());
 }
 
 fn produce_draw_commands(dna: Dna) -> Vec<DrawCommand> {
@@ -53,14 +57,14 @@ fn produce_draw_commands(dna: Dna) -> Vec<DrawCommand> {
 
 #[test]
 fn health_check_test() {
-    fn check_for<P: AsRef<Path>, S: AsRef<str>>(example_path: P, example_name: S) {
-        let health_check_dna = Dna::from_string(&std::fs::read_to_string(example_path.as_ref().join("dna")).unwrap()).unwrap();
+    fn check_for<P: AsRef<str>, S: AsRef<str>>(task: P, task_name: S) {
+        let dna = dna_for_task(&task);
         let start_time = Instant::now();
-        let actual_commands = produce_draw_commands(health_check_dna);
-        println!("{} took: {:?}", example_name.as_ref(), start_time.elapsed());
-        let expected_commands: Vec<DrawCommand> = load(example_path.as_ref().join("commands.ron"));
+        let actual_commands = produce_draw_commands(dna);
+        println!("{} took: {:?}", task_name.as_ref(), start_time.elapsed());
+        let expected_commands: Vec<DrawCommand> = load(["data", task.as_ref(), "commands.ron"].iter().collect::<PathBuf>());
         assert_eq!(expected_commands, actual_commands);
     }
-    check_for("data/health_check", "Health check");
-    check_for("data/repair_guide", "Repair guide");
+    check_for("health_check", "Health check");
+    check_for("repair_guide", "Repair guide");
 }
