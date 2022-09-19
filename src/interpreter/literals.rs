@@ -94,7 +94,7 @@ pub fn nat(context: &mut Context) -> InterpreterResult<usize> {
 
 #[test]
 fn asnat_test() {
-    println!("{:?}", asnat(7331));
+    println!("{:?}", asnat(1337));
     let mut context = Context::new(Dna::from_string("ICIICCCIICIP").unwrap());
     let n = nat(&mut context);
     println!("{:?}", n);

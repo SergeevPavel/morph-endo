@@ -1337,7 +1337,7 @@
     AddBitmap,
     ClearBucket,
     TryFill,
-    Clip,
+    Compose,
     ClearBucket,
     AddColor(Alpha(Transparent)),
     TryFill,

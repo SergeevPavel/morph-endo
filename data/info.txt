@@ -29,9 +29,16 @@ b1...b_n
 bi = C if the ith least-significant bit is set
 bi = I otherwise
 
+
 Catalog page index  IIPIFFCPICFPP[]PPCFIIC
-1337 =>  CIICCCIICICP
-626  => ICIICCCIICIP
+
+IPIFFCPICFPP  PPFIIC
+ICIICCIICI P
+
+
+
+1337 => CICIICCCIICP
+626  =>  ICIICCCIICI  P
 Happy navigating
 
 
@@ -40,3 +47,5 @@ REVERSAL may occur!
 Don't change the length of integers, or TOTAL PROTONIC
 
 *catalog page index IIPIFFCPICFPPCIICCCIICICPPPCFIIC
+
+IIPIFFCPICFPPCICIICCCIICPPPCFIIC

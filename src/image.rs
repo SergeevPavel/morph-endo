@@ -108,7 +108,8 @@ impl DrawCommand {
 
             [P, I, I, P, I, I, P] => Some(DrawCommand::TryFill),
             [P, C, C, P, F, F, P] => Some(DrawCommand::AddBitmap),
-            [P, F, F, P, C, C, P] => Some(DrawCommand::Clip),
+            [P, F, F, P, C, C, P] => Some(DrawCommand::Compose),
+            [P, F, F, I, C, C, F] => Some(DrawCommand::Clip),
             _ => None
         }
     }

@@ -147,7 +147,7 @@ pub struct Drawer {
 
 fn empty_bitmap(max_x: i32, max_y: i32) -> RgbaImage {
     ImageBuffer::from_fn(max_x as u32, max_y as u32, |_x, _y| {
-        Rgba([0, 0, 0, 255])
+        Rgba([0, 0, 0, 0])
     })
 }
 
@@ -305,7 +305,7 @@ impl Drawer {
 crate::entry_point!("drawer", drawer_main);
 fn drawer_main() {
     let folder = std::env::args().nth(2).expect("Not enough arguments");
-    let commands: Vec<DrawCommand> = load(["data", &folder, "commands.ron"].iter().collect::<PathBuf>());
+    let commands: Vec<DrawCommand> = load(["cache", &folder, "commands.ron"].iter().collect::<PathBuf>());
     let mut drawer = Drawer::new();
     // let images_dir = ["cache", &folder, "images"].iter().collect::<PathBuf>();
     // if images_dir.exists() {
