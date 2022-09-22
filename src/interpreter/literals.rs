@@ -94,8 +94,15 @@ pub fn nat(context: &mut Context) -> InterpreterResult<usize> {
 
 #[test]
 fn asnat_test() {
-    println!("{:?}", asnat(1337));
-    let mut context = Context::new(Dna::from_string("ICIICCCIICIP").unwrap());
-    let n = nat(&mut context);
-    println!("{:?}", n);
+    let n = 112;
+    let s = format!("{:b}", n);
+    let s2: String = s.chars().rev().map(|c| {
+        match c {
+            '0' => 'C',
+            '1' => 'F',
+            _ => unreachable!()
+        }
+    }).collect();
+    let s1: String = std::iter::repeat('C').take(s.len()).collect();
+    println!("IIPIFFCPICFPPICIIC{}IICIPPP{}IIC", s1, s2);
 }

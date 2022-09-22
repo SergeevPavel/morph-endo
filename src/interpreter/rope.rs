@@ -4,8 +4,8 @@ use std::marker::PhantomData;
 use std::cmp::{min};
 use xi_rope::interval::IntervalBounds;
 
-pub const MIN_LEAF: usize = 511;
 pub const MAX_LEAF: usize = 1024;
+pub const MIN_LEAF: usize = MAX_LEAF / 2 - 1;
 
 #[derive(Clone)]
 pub struct SeqLeaf<T> where T: Clone, T: Default {

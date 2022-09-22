@@ -35,9 +35,6 @@ Catalog page index  IIPIFFCPICFPP[]PPCFIIC
 IPIFFCPICFPP  PPFIIC
 ICIICCIICI P
 
-
-
-1337 => CICIICCCIICP
 626  =>  ICIICCCIICI  P
 Happy navigating
 
@@ -48,4 +45,63 @@ Don't change the length of integers, or TOTAL PROTONIC
 
 *catalog page index IIPIFFCPICFPPCIICCCIICICPPPCFIIC
 
-IIPIFFCPICFPPCICIICCCIICPPPCFIIC
+================================================================
+
+IIPIFFCPICFPPICIICCCIICIPPPCFIIC  | repair topics
+IIPIFFCPICFPPICII CCIICIPPP FIIC    | repair guide
+
+1337 => 10100111001 => CIICCCIICIC
+
+
+1337 => CIICCCIICIC P
+       ICII CCIICI P => 306
+
+=================================================================
+
+IIP IFF CPICIC IIC PIICIPPPICIIC      | health check
+
+IIPIFFCPICPCIICICIICIPPPPIIC       | rotate planet
+IIPIFFCPICFPPICIICCIICIPPPFIIC       | repair guide
+IIPIFFCPICFPPICIICCCIICIPPPCFIIC     | repair topics
+
+==============================================================
+
+IIPIFFCPICFPPICIICCIIC IPPPFIIC  | repair guide
+pattern                template
+
+Pattern: [Open, Search: IFPCFFP, Close,  PBase: I, Close]
+IIP -> Open
+IFX CPICFPPIC -> Search: IFPCFFP
+IIC -> Close
+C -> PBase: I
+IIC -> Close
+
+Template: [Ref l: 0 n: 0, TBase: C]
+IP P P -> Ref l: 0 n: 0
+F      -> TBase: C
+IIC    -> End of template
+
+==============================================================
+
+IIP IFF CPICFPPIC IIC CC IIC      IP P P  CF IIC       | repair topics
+
+Pattern: [Open, Search: IFPCFFP, Close, PBase: I, PBase: I, Close]
+IIP -> Open
+IFX CPICFPPIC -> Search: IFPCFFP
+IIC -> Close
+C -> PBase: I
+C -> PBase: I
+IIC -> Close
+
+Template: [Ref l: 0 n: 0, TBase: C]
+IP P P -> Ref l: 0 n: 0
+C      -> TBase: I
+F      -> TBase: C
+IIC    -> End of template
+
+IIPIFFCPICFPPICIIC[C]IIC IPPP[F]IIC
+
+
+1337 => 10100111001 => CIICCCIICIC  => FCCFFFCCFCF
+
+IIPIFFCPICFPPICIICCCCCCCCCCCCIICIPPPFCCFFFCCFCFIIC
