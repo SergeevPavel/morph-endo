@@ -5,6 +5,7 @@ mod image;
 mod drawer;
 mod interpreter;
 mod gui;
+mod prefixes;
 
 
 #[linkme::distributed_slice]

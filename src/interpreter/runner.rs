@@ -70,7 +70,7 @@ fn check_for<P: AsRef<str>, S: AsRef<str>>(task: P, task_name: S) {
 #[test]
 fn health_check_test() {
     check_for("health_check", "Health check");
-    check_for("repair_guide", "Repair guide");
+    check_for("repair_guide/initial", "Repair guide");
 }
 
 #[test]
