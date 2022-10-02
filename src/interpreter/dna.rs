@@ -1,3 +1,4 @@
+use std::fmt::Write;
 use std::iter::Skip;
 use crate::interpreter::rope::{MAX_LEAF, Seq, SeqIter};
 use serde::{Serialize, Deserialize};
@@ -13,6 +14,27 @@ impl Default for Base {
     }
 }
 
+impl Base {
+    pub fn from_char(c: char) -> Result<Self, String> {
+        match c {
+            'I' => Ok(Base::I),
+            'C' => Ok(Base::C),
+            'F' => Ok(Base::F),
+            'P' => Ok(Base::P),
+            other => Err(format!("Unexpected symbol {}", other).to_string())
+        }
+    }
+
+    pub fn to_char(&self) -> char {
+        match self {
+            Base::I => 'I',
+            Base::C => 'C',
+            Base::F => 'F',
+            Base::P => 'P'
+        }
+    }
+}
+
 pub type ShortDna = Vec<Base>;
 
 #[derive(Clone)]
@@ -23,11 +45,21 @@ pub struct Dna {
 
 impl std::fmt::Debug for Dna {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let mut list_repr = f.debug_list();
         for b in self.seq.into_iter() {
-            list_repr.entry(b);
+            let c = match b {
+                Base::I => 'I',
+                Base::C => 'C',
+                Base::F => 'F',
+                Base::P => 'P'
+            };
+            f.write_char(c)?;
         }
-        list_repr.finish()
+        Ok(())
+        // let mut list_repr = f.debug_list();
+        // for b in self.seq.into_iter() {
+        //     list_repr.entry(b);
+        // }
+        // list_repr.finish()
     }
 }
 
@@ -38,13 +70,7 @@ impl Dna {
 
     pub fn from_string(s: &str) -> Result<Self, String> {
         let data: Result<Vec<Base>, String> = s.chars().map(|c| {
-            match c {
-                'I' => Ok(Base::I),
-                'C' => Ok(Base::C),
-                'F' => Ok(Base::F),
-                'P' => Ok(Base::P),
-                other => Err(format!("Unexpected symbol {}", other).to_string())
-            }
+            Base::from_char(c)
         }).collect();
         Ok(Dna{
             skipped: 0,

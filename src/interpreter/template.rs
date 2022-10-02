@@ -1,13 +1,30 @@
+use std::fmt::{Debug, Formatter, Write};
 use crate::interpreter::dna::Base;
 use crate::interpreter::interpreter::{Context, InterpreterResult};
 use crate::interpreter::literals::*;
 
 
-#[derive(Debug, Clone, Eq, PartialEq)]
+#[derive(Clone, Eq, PartialEq)]
 pub enum TItem {
     TBase(Base),
     Ref { n: usize, l: usize },
     Len { n: usize },
+}
+
+impl Debug for TItem {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match self {
+            TItem::TBase(b) => {
+                f.write_char(b.to_char())
+            }
+            TItem::Ref { n, l } => {
+                write!(f, "Ref(num={:?}, prot_lvl={:?})", n, l)
+            }
+            TItem::Len { n } => {
+                write!(f, "Len({:?})", n)
+            }
+        }
+    }
 }
 
 pub type Template = Vec<TItem>;

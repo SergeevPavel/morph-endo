@@ -1,14 +1,38 @@
+use std::fmt::{Debug, Formatter, Write, write};
 use crate::interpreter::dna::Base;
 use crate::interpreter::interpreter::{Context, InterpreterResult};
 use crate::interpreter::literals::*;
 
-#[derive(Debug, Clone, Eq, PartialEq)]
+#[derive(Clone, Eq, PartialEq)]
 pub enum PItem {
     PBase(Base),
     Skip { n: usize },
     Search { s: Vec<Base> },
     Open,
     Close,
+}
+
+impl Debug for PItem {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match self {
+            PItem::PBase(b) => {
+                f.write_char(b.to_char())
+            }
+            PItem::Skip { n } => {
+                write!(f, "Skip({:?})", n)
+            }
+            PItem::Search { s } => {
+                let str: String = s.iter().map(|b| b.to_char()).collect();
+                write!(f, "Search({:?})", str)
+            }
+            PItem::Open => {
+                write!(f, "Open")
+            }
+            PItem::Close => {
+                write!(f, "Close")
+            }
+        }
+    }
 }
 
 pub type Pattern = Vec<PItem>;

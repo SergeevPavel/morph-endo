@@ -7,3 +7,4 @@ mod runner;
 mod literals;
 mod template;
 mod match_replace;
+mod cmd;
