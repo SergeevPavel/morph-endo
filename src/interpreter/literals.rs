@@ -96,3 +96,10 @@ pub fn nat(context: &mut Context) -> InterpreterResult<usize> {
 fn asnat_test() {
     println!("{:?}", asnat(42));
 }
+
+#[test]
+fn nat_test() {
+    use Base::*;
+    let mut c = Context::new(Dna::from_slice(&[I, C, I, I, C, I, C, C, I, I, C, P]));
+    println!("{:?}", nat(&mut c));
+}

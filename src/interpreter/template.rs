@@ -3,6 +3,8 @@ use crate::interpreter::dna::Base;
 use crate::interpreter::interpreter::{Context, InterpreterResult};
 use crate::interpreter::literals::*;
 
+use super::dna::ShortDna;
+
 
 #[derive(Clone, Eq, PartialEq)]
 pub enum TItem {
@@ -27,7 +29,36 @@ impl Debug for TItem {
     }
 }
 
+impl TItem {
+    pub fn encode(&self) -> ShortDna {
+        use Base::*;
+        let mut result = Vec::new();
+        match self {
+            TItem::TBase(b) => match b {
+                Base::I => result.push(C),
+                Base::C => result.push(F),
+                Base::F => result.push(P),
+                Base::P => result.extend_from_slice(&[I, C]),
+            },
+            TItem::Ref { n, l } => {
+                result.extend_from_slice(&[I, F]);
+                result.extend_from_slice(&asnat(*n));
+                result.extend_from_slice(&asnat(*l));
+            },
+            TItem::Len { n } => {
+                result.extend_from_slice(&[I, I, P]);
+                result.extend_from_slice(&asnat(*n));
+            },
+        }
+        return result;
+    }
+}
+
 pub type Template = Vec<TItem>;
+
+pub fn encode(t: &Template) -> ShortDna {
+    t.iter().flat_map(|t| t.encode()).collect()
+}
 
 pub fn template(context: &mut Context) -> InterpreterResult<Template> {
     use Base::*;
